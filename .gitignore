@@ -1,0 +1,9 @@
+# MAC OS
+.DS_Store
+
+# developing
+.vscode
+
+# python 
+*__pycache__
+sample.egg-info
