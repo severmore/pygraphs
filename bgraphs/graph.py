@@ -64,9 +64,26 @@ class Graph:
     if graph is not None:
       for start, ends in enumerate(graph.edges):
         self.edges[start].extend(ends)
+    
+    # Set maximum degree of vertices in the graph
+    self.max_degree = 0
+    self._update_max_degree()
+
+
+  def _update_max_degree(self):
+    """ 
+    Count a maximum degree among vertices in the graph, if any, otherwise 
+    return 0. 
+    """
+    self.max_degree = 0
+    for vertex in self.edges:
+      if len(vertex) > self.max_degree:
+        self.max_degree = len(vertex)
+
 
   def __str__(self):
     return str(self.edges)
+
 
   def __repr__(self):
     return str(self.edges)
