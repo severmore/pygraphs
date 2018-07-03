@@ -4,7 +4,7 @@ with open('README.md') as rm:
   readme = rm.read()
 
 with open('LICENSE') as li:
-  license = li.read()
+  license_ = li.read()
 
 setup(
   name = 'sample',
@@ -14,6 +14,6 @@ setup(
   author = 'Roman Ivanov',
   auhtor_email = 'iromcorp@gmail.com',
   url = 'https://github.com/severmore/pygraphs.git',
-  license = license,
+  license = license_,
   packages = find_packages(exclude=('tests', 'docs'))
 )
