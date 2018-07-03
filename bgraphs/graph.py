@@ -55,7 +55,7 @@ class Graph:
         if v_max > vertices_num:
           vertices_num = v_max
     
-    self.edges = [[] for i in range(vertices_num)]
+    self.edges = [[] for _ in range(vertices_num)]
 
     if edges is not None:
       for start, end in edges:
@@ -87,7 +87,3 @@ class Graph:
 
   def __repr__(self):
     return str(self.edges)
-
-
-if __name__ == '__main__':
-  print(Graph(edges=[(0,1), (0,2), (0, 3)], graph=Graph(edges=[(2,0), (1,2)])))
