@@ -7,7 +7,7 @@ TO: http://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
 https://github.com/severmore/pygraphs
 """
 
-def color(graph, algorithm='Vising'):
+def colorize(graph, algorithm='Vising'):
   """
   Perform minimal edge coloring on a bipartite graph.
 
@@ -129,11 +129,11 @@ if __name__ == '__main__':
   #     [(0,2), (0,3), (1,2), (1,3), (2,0), (2,1), (3,0), (3,1)]
   # )
   # print(g)
-  # coloring = color(g)
+  # coloring = colorize(g)
   # print(coloring)
 
   # g = generating.bgraph(6)
-  # coloring = color(g)
+  # coloring = colorize(g)
   # print(g)
   # print(coloring)
 

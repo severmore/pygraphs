@@ -91,13 +91,13 @@ class VisingColoringTestCase(unittest.TestCase):
   def test_vising_simple(self):
     EDGES = [(0,2), (0,3), (1,2), (1,3), (2,0), (2,1), (3,0), (3,1)]
     graph = bgraphs.graph.Graph(edges=EDGES)
-    coloring = bgraphs.coloring.color(graph)
+    coloring = bgraphs.coloring.colorize(graph)
     self.assertTrue(self.validate_edge_coloring(coloring, graph))
   
   def test_vising_generated(self):
     graph = bgraphs.generating.bgraph(20, vratio_low=.4, vratio_high=.6, 
                                       edge_prob=0.3)
-    coloring = bgraphs.coloring.color(graph)
+    coloring = bgraphs.coloring.colorize(graph)
     self.assertTrue(self.validate_edge_coloring(coloring, graph))
 
 
