@@ -1,6 +1,7 @@
 import unittest
 import bgraphs.graph
 import bgraphs.coloring
+import bgraphs.generating
 
 class GraphCreationTestCase(unittest.TestCase):
   """ Test graph creation in different ways """
@@ -68,7 +69,7 @@ class GraphCreationTestCase(unittest.TestCase):
     self.assertListEqual(graph.edges, self.EDGES_INCIDENCE)
     self.assertEqual(graph.max_degree, 2)
 
-import bgraphs.generating
+
 
 class VisingColoringTestCase(unittest.TestCase):
 
@@ -81,7 +82,6 @@ class VisingColoringTestCase(unittest.TestCase):
     for start, incidents in enumerate(graph.edges):
       colorset = { coloring[start, end] for end in incidents }
       
-      # TODO: change to graph.degree(start) when it is implements
       if len(colorset) != len(graph.edges[start]):
         return False
     

@@ -34,8 +34,6 @@ def bgraph(vertices_num, vratio_low=0.2, vratio_high=0.8,
     edges = list()
     part_one = round(random.uniform(vratio_low, vratio_high) * vertices_num)
 
-    print(part_one, vertices_num)
-    
     for start in range(part_one):
       for end in range(part_one, vertices_num):
         

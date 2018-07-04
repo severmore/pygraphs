@@ -31,8 +31,7 @@ def colorize(graph, algorithm='Vising'):
   if algorithm == 'Vising':
     return VisingColoring(graph)()
   
-  else:
-    return None
+  return None
 
 
 class VisingColoring:
@@ -132,20 +131,9 @@ if __name__ == '__main__':
   # coloring = colorize(g)
   # print(coloring)
 
-  # g = generating.bgraph(6)
+  g = generating.bgraph(6)
   # coloring = colorize(g)
   # print(g)
   # print(coloring)
 
-
-
-    
-
-
-
-
-    
-
-
-  
-
+  print(colorize(g, algorithm='kray'))
