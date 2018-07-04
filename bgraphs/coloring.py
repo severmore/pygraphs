@@ -1,6 +1,6 @@
 """
-Created by Ivanov Roman and Maxim Dudin. This module is intended to define
-structure describing graphs in this package.
+Created by Ivanov Roman and Maxim Dudin. This module contains edge coloring
+algorithm implementation.
 
 TO: http://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
 
@@ -76,7 +76,7 @@ class VisingColoring:
     Get an neighboring vertex such that a correspongin edge has color specified. 
     """
 
-    for end in graph[vertex]:
+    for end in self.graph.edges[vertex]:
       if self.color[vertex, end] == color:
         return end
     
@@ -115,20 +115,27 @@ class VisingColoring:
         
         self.set_color(vertex, vertex_next, color_next)
 
-        color, color_next = color_next, color
         vertex = vertex_next
-        vertex_next = self.get_neighbor(vertex, color_current)
+        vertex_next = self.get_neighbor(vertex, color_next)
+        
+        color, color_next = color_next, color
 
     return self.color
 
 if __name__ == '__main__':
   import graph
-  g = graph.Graph(edges=
-      [(0,2), (0,3), (1,2), (1,3), (2,0), (2,1), (3,0), (3,1)]
-  )
-  print(g)
-  coloring = color(g)
-  print(coloring)
+  import generating
+  # g = graph.Graph(edges=
+  #     [(0,2), (0,3), (1,2), (1,3), (2,0), (2,1), (3,0), (3,1)]
+  # )
+  # print(g)
+  # coloring = color(g)
+  # print(coloring)
+
+  # g = generating.bgraph(6)
+  # coloring = color(g)
+  # print(g)
+  # print(coloring)
 
 
 

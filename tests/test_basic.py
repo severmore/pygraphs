@@ -68,11 +68,15 @@ class GraphCreationTestCase(unittest.TestCase):
     self.assertListEqual(graph.edges, self.EDGES_INCIDENCE)
     self.assertEqual(graph.max_degree, 2)
 
+import bgraphs.generating
 
 class VisingColoringTestCase(unittest.TestCase):
 
   def validate_edge_coloring(self, coloring, graph):
     """ Check if edge coloring is valid. """
+
+    print(graph)
+    print(coloring)
     
     for start, incidents in enumerate(graph.edges):
       colorset = { coloring[start, end] for end in incidents }
@@ -82,14 +86,21 @@ class VisingColoringTestCase(unittest.TestCase):
         return False
     
     return True
-
+    
 
   def test_vising_simple(self):
     EDGES = [(0,2), (0,3), (1,2), (1,3), (2,0), (2,1), (3,0), (3,1)]
     graph = bgraphs.graph.Graph(edges=EDGES)
     coloring = bgraphs.coloring.color(graph)
     self.assertTrue(self.validate_edge_coloring(coloring, graph))
+  
+  def test_vising_generated(self):
+    graph = bgraphs.generating.bgraph(20, vratio_low=.4, vratio_high=.6, 
+                                      edge_prob=0.3)
+    coloring = bgraphs.coloring.color(graph)
+    self.assertTrue(self.validate_edge_coloring(coloring, graph))
 
 
 if __name__ == '__main__':
+
   unittest.main()
