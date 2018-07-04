@@ -1,11 +1,7 @@
 import unittest
 import bgraphs.graph
-
-class TestProject(unittest.TestCase):
-  """ Project existance test """
-
-  def test_if_project_is_ok(self):
-    assert True
+import bgraphs.coloring
+import bgraphs.generating
 
 class GraphCreationTestCase(unittest.TestCase):
   """ Test graph creation in different ways """
@@ -74,5 +70,37 @@ class GraphCreationTestCase(unittest.TestCase):
     self.assertEqual(graph.max_degree, 2)
 
 
+
+class VisingColoringTestCase(unittest.TestCase):
+
+  def validate_edge_coloring(self, coloring, graph):
+    """ Check if edge coloring is valid. """
+
+    print(graph)
+    print(coloring)
+    
+    for start, incidents in enumerate(graph.edges):
+      colorset = { coloring[start, end] for end in incidents }
+      
+      if len(colorset) != len(graph.edges[start]):
+        return False
+    
+    return True
+    
+
+  def test_vising_simple(self):
+    EDGES = [(0,2), (0,3), (1,2), (1,3), (2,0), (2,1), (3,0), (3,1)]
+    graph = bgraphs.graph.Graph(edges=EDGES)
+    coloring = bgraphs.coloring.colorize(graph)
+    self.assertTrue(self.validate_edge_coloring(coloring, graph))
+  
+  def test_vising_generated(self):
+    graph = bgraphs.generating.bgraph(20, vratio_low=.4, vratio_high=.6, 
+                                      edge_prob=0.3)
+    coloring = bgraphs.coloring.colorize(graph)
+    self.assertTrue(self.validate_edge_coloring(coloring, graph))
+
+
 if __name__ == '__main__':
+
   unittest.main()

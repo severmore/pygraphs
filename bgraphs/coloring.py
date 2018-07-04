@@ -1,0 +1,139 @@
+"""
+Created by Ivanov Roman and Maxim Dudin. This module contains edge coloring
+algorithm implementation.
+
+TO: http://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
+
+https://github.com/severmore/pygraphs
+"""
+
+def colorize(graph, algorithm='Vising'):
+  """
+  Perform minimal edge coloring on a bipartite graph.
+
+  Args:
+    graph(:obj:'Graph'): a graph which edges is to color. The algorithm assumes
+        graph to be a bipartite without checking and keeping this property is 
+        up to user.
+    
+    algorithm(:obj:`str`, optinal): the algorithm to use for edge coloring.
+  
+  Return:
+    :obj:`dict` of (:obj:`turple` of int - int): - the resulting coloring of
+        edges of a given graph.
+  
+  References:
+    [1] Harold N. Gabow. Using Euler Partition to Edge Color Bipartite 
+    Multigraphs // The International Journal of Computer and Information 
+    Sciences. Vol. 5, No. 4, 1976.
+
+  """
+  if algorithm == 'Vising':
+    return VisingColoring(graph)()
+  
+  return None
+
+
+class VisingColoring:
+
+  NOCOLOR = -1
+
+  def __init__(self, graph):
+
+    self.graph = graph
+
+    # All colors need to color a given graph. See Vising's Theorem [1]
+    self.all_colors = set(range(graph.max_degree)) 
+
+    self.color = dict()
+    for start, incidents in enumerate(graph.edges):
+      for end in incidents:
+        self.color[start, end] = self.NOCOLOR
+  
+
+  def __call__(self):
+
+    return self.colorize()
+
+
+  def set_color(self, vone, vtwo, color):
+    """ Set color of an edge of an undirected graph. """
+
+    self.color[vone, vtwo] = color
+    self.color[vtwo, vone] = color
+
+
+  def get_missing_colors(self, vertex):
+    """ Get a set of missing colors for a vertex specified. """
+
+    colors_used = { self.color[vertex, end] for end in self.graph.edges[vertex] }
+    return self.all_colors - colors_used
+
+
+  def get_neighbor(self, vertex, color):
+    """ 
+    Get an neighboring vertex such that a correspongin edge has color specified. 
+    """
+
+    for end in self.graph.edges[vertex]:
+      if self.color[vertex, end] == color:
+        return end
+    
+    return None
+
+
+  def colorize(self):
+    """ 
+    The method finds an edge coloring of an undirtected graph using Vising's
+    algorithm.
+    """
+
+    for start, end in self.color.keys():
+
+      if self.color[start, end] != self.NOCOLOR:
+        continue
+
+      missing_colorset_start = self.get_missing_colors(start)
+      missing_colorset_end   = self.get_missing_colors(end)
+      missing_colorset_common = missing_colorset_start.intersection(
+          missing_colorset_end)
+
+      if missing_colorset_common:
+        missing_color = missing_colorset_common.pop()
+        self.set_color(start, end, missing_color)
+        continue
+
+      color = missing_colorset_start.pop()
+      color_next = missing_colorset_end.pop()
+      vertex = end
+      vertex_next = self.get_neighbor(vertex, color)
+
+      self.set_color(start, end, color)
+
+      while vertex_next:
+        
+        self.set_color(vertex, vertex_next, color_next)
+
+        vertex = vertex_next
+        vertex_next = self.get_neighbor(vertex, color_next)
+        
+        color, color_next = color_next, color
+
+    return self.color
+
+if __name__ == '__main__':
+  import graph
+  import generating
+  # g = graph.Graph(edges=
+  #     [(0,2), (0,3), (1,2), (1,3), (2,0), (2,1), (3,0), (3,1)]
+  # )
+  # print(g)
+  # coloring = colorize(g)
+  # print(coloring)
+
+  g = generating.bgraph(6)
+  # coloring = colorize(g)
+  # print(g)
+  # print(coloring)
+
+  print(colorize(g, algorithm='kray'))
