@@ -55,6 +55,7 @@ class Graph:
         if v_max > vertices_num:
           vertices_num = v_max
     
+    self.vertices_num = vertices_num
     self.edges = [[] for _ in range(vertices_num)]
 
     if edges is not None:
@@ -67,18 +68,7 @@ class Graph:
     
     # Set maximum degree of vertices in the graph
     self.max_degree = 0
-    self._update_max_degree()
-
-
-  def _update_max_degree(self):
-    """ 
-    Count a maximum degree among vertices in the graph, if any, otherwise 
-    return 0. 
-    """
-    self.max_degree = 0
-    for vertex in self.edges:
-      if len(vertex) > self.max_degree:
-        self.max_degree = len(vertex)
+    self.update_max_degree()
 
 
   def __str__(self):
@@ -87,3 +77,53 @@ class Graph:
 
   def __repr__(self):
     return str(self.edges)
+
+
+  def degree(self, vertex):
+    """ int -> int: Returns a degree of a given edge. """
+    
+    return len(self.edges[vertex])
+
+
+  def get_vertices(self):
+    """ () -> range: Returns vertices of the graph as a range object. """
+    return range(self.vertices_num)
+
+
+  def update_max_degree(self):
+    """ Count a maximum degree among vertices in the graph, if any, otherwise 
+    return 0. 
+    """
+    self.max_degree = 0
+    for vertex in self.edges:
+      if len(vertex) > self.max_degree:
+        self.max_degree = len(vertex)
+
+
+  def remove_edge(self, start, end):
+    """ Remove an edge from the graph. It is assumed no vertex is deleted and 
+    `max_degree` is not updated. """
+    self.edges[start].remove(end)
+
+
+class UDGraph(Graph):
+  """ A class for undirected graphs. """
+
+  def remove_edge(self, start, end):
+    """ Remove an edge from the graph. It is assumed no vertex is deleted and 
+    `max_degree` is not updated. """
+    self.edges[start].remove(end)
+    self.edges[end].remove(start)
+
+
+if __name__ == '__main__':
+  edges = [ (0, 1), (0, 3), (1, 0), (1, 2), (2, 0), (2, 3), (3, 2) ]
+  graph = Graph(edges=edges)
+  print(graph)
+  graph.remove_edge(0,1)
+  print(graph)
+
+  udgraph = UDGraph(edges=edges)
+  print(udgraph)
+  udgraph.remove_edge(0,1)
+  print(udgraph)

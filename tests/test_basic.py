@@ -70,7 +70,33 @@ class GraphCreationTestCase(unittest.TestCase):
     self.assertEqual(graph.max_degree, 2)
 
 
+class RemoveAddGraphTestCase(unittest.TestCase):
 
+  def setUp(self):
+    edges = [ (0, 1), (0, 3), (1, 0), (1, 2), (2, 0), (2, 3), (3, 2) ]
+    self.graph = bgraphs.graph.Graph(edges=edges)
+
+  def test_removing_edge(self):
+    edges_ref = [ (0, 3), (1, 0), (1, 2), (2, 0), (2, 3), (3, 2) ]
+    edgeslist_ref = bgraphs.graph.Graph(edges=edges_ref).edges
+    self.graph.remove_edge(0, 1)
+    self.assertListEqual(self.graph.edges, edgeslist_ref)
+
+
+class RemoveAddUDGraphTestCase(unittest.TestCase):
+
+  def setUp(self):
+    edges = [ (0, 1), (0, 3), (1, 0), (1, 2), (2, 0), (2, 3), (3, 2) ]
+    self.udgraph = bgraphs.graph.UDGraph(edges=edges)
+
+  def test_removing_edge(self):
+    edges_ref = [ (0, 3), (1, 2), (2, 0), (2, 3), (3, 2) ]
+    edgeslist_ref = bgraphs.graph.UDGraph(edges=edges_ref).edges
+    self.udgraph.remove_edge(0, 1)
+    self.assertListEqual(self.udgraph.edges, edgeslist_ref)
+
+
+@unittest.skip('Skip for performance sake')
 class VisingColoringTestCase(unittest.TestCase):
 
   def validate_edge_coloring(self, coloring, graph):
