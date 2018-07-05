@@ -139,7 +139,7 @@ class ColeHopcroftColoring:
   def __call__(self):
     return self.colorize()
   
-  def colorize(self, graph):
+  def colorize(self):
     return None
 
 
@@ -147,7 +147,7 @@ class ColeHopcroftColoring:
 
 if __name__ == '__main__':
   import graph
-  import generating
+  # import generating
   # g = graph.Graph(edges=
   #     [(0,2), (0,3), (1,2), (1,3), (2,0), (2,1), (3,0), (3,1)]
   # )
@@ -155,9 +155,9 @@ if __name__ == '__main__':
   # coloring = colorize(g)
   # print(coloring)
   
-  g = generating.bgraph(6)
+  # g = generating.bgraph(6)
   # coloring = colorize(g)
   # print(g)
   # print(coloring)
 
-  print(colorize(g, algorithm='kray'))
+  # print(colorize(g, algorithm='kray'))
