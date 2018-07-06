@@ -112,6 +112,13 @@ class Graph:
     self.edges[start].append(end)
 
 
+  def union(self, graph):
+    """ Returns the union of the graphs. It is assumed vertices set remains
+    unchanged. """
+    for start, incidence in enumerate(graph.edges):
+      self.edges[start].extend(incidence)
+
+
 class UDGraph(Graph):
   """ A class for undirected graphs. """
 
@@ -127,16 +134,3 @@ class UDGraph(Graph):
     `max_degree` is not updated. """
     self.edges[start].append(end)
     self.edges[end].append(start)
-
-
-if __name__ == '__main__':
-  edges = [ (0, 1), (0, 3), (1, 0), (1, 2), (2, 0), (2, 3), (3, 2) ]
-  graph = Graph(edges=edges)
-  print(graph)
-  graph.remove_edge(0,1)
-  print(graph)
-
-  udgraph = UDGraph(edges=edges)
-  print(udgraph)
-  udgraph.remove_edge(0,1)
-  print(udgraph)

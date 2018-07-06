@@ -83,10 +83,11 @@ def euler_split(graph):
   partition of the graph to the subgraphs.
 
   Args:
-    graph(:obj:`Graph`) - a graph to split
+    graph(:obj:`Graph`) - a graph for which a matching covering maximum degree
+        vertices is need to find.
 
   Returns:
-    graph(:obj:`Graph`), graph(:obj:`Graph`) - two subraphs of `graph`.
+    :obj:`list` of :obj:`turple` of int - a matching to find as a list of edges.
   
   References:
     [1] Harold N. Gabow. Using Euler Partition to Edge Color Bipartite 
@@ -110,5 +111,129 @@ def euler_split(graph):
         G2.add_edge(v_prev, vertex)
 
       v_prev = vertex
+  
+  G1.update_max_degree()
+  G2.update_max_degree()
 
   return G1, G2
+
+
+def _covering_partition(graph):
+  """ 
+  Finds Cole-Hopcroft graph partition - a partition into two subgraphs such that
+   the following properties holds:
+    -  both subgraphs have the same to graph vertices,
+    -  a disjoint union of thier edges forms the edges of the initial graph,
+    -  the set of vertices having maximum degree in the graph also have maximum
+    degree in each subgraphs.
+
+  If the maximum degree of the initial graph is even then Cole-Hopcroft 
+  partition is just an Euler split.
+
+  Args:
+    graph(:obj:`Graph`) - a graph to split
+
+  Returns:
+    :obj:`Graph`, :obj:`Graph` - two subraphs of `graph`.
+
+  References:
+    [2] Richard Cole, and John Hopcroft. On Edge Coloring Bipartite Graphs //
+    SIAM Journal on Computing, Vol. 11, No. 3, pp. 540-546, 1982.
+  """
+
+  if graph.max_degree % 2 == 0:
+    return euler_split(graph) 
+
+  D = graph.max_degree
+
+  k, d = D // 4, 1
+  
+  if D % 4 == 3:
+    k, d = k + 1, -1
+
+  # Find M-containing set - a set of max degree vertices in a graph.
+  M = { v for v in graph.get_vertices() if graph.degree(v) == D }
+
+  H1, H2 = euler_split(graph)
+
+  # M1 is a subset of M which vertices have degree 2 * k + d in H1. If M1 have 
+  # less vertices than half of M then swap H1 and H2, M1 and M2; so M1 should 
+  # have at least half of maximum degree vertices.
+
+  M1 = { v for v in M if H1.degree(v) == 2 * k + d }
+  M2 = M - M1
+
+  if len(M1) < len(M) / 2:
+    H2, H1 = H1, H2
+    M2, M1 = M1, M2
+
+  # Iterates till in both subraphs the set of max degree vertices equals M
+  while M2:
+
+    H21, H22 = euler_split(H2)
+    
+    M21 = { v for v in M2 if H21.degree(v) == k + d }
+    M22 = M2 - M21
+
+    if len(M21) < len(M2) / 2:
+      H22, H21 = H21, H22
+      M22, M21 = M21, M22
+
+    H1.union(H21)
+    H2 = H22
+
+    if k % 2:
+      k = k / 2
+    else:
+      H1, H2 = H2, H1 
+      k = (D - k) / 2
+      d = -d
+
+    M1 = M1.union(M21)
+    M2 = M22
+
+  H1.update_max_degree()
+  H2.update_max_degree()
+
+  return H1, H2
+
+
+def covering_matching(graph):
+  """ 
+  Finds matching covering maximum degree vertices of a graph. The matching is a
+  subset of a graph edges such that no two edges have common vertex. It is said
+  that matching covers a set of vertices, if for all vertex from this set there
+  is an edge from matching that contains this vertex.
+
+  Args:
+    graph(:obj:`Graph`) - a graph to split
+
+  Returns:
+    graph(:obj:`Graph`), graph(:obj:`Graph`) - two subraphs of `graph`.
+
+  References:
+    [2] Richard Cole, and John Hopcroft. On Edge Coloring Bipartite Graphs //
+    SIAM Journal on Computing, Vol. 11, No. 3, pp. 540-546, 1982.
+  """
+  while graph.max_degree > 1:
+    
+    G1, G2 = _covering_partition(graph)
+
+    graph = G1 if G1.max_degree < G2.max_degree else G1
+
+  return graph.edges
+
+
+if __name__ == '__main__':
+
+  import bgraphs.graph
+
+  EDGES = [ (0, 3), (3, 0), (0, 4), (4, 0),
+          (1, 3), (3, 1), (1, 4), (4, 1), (1, 5), (5, 1),
+          (2, 3), (3, 2)]
+  
+  graph = bgraphs.graph.UDGraph(edges=EDGES)
+  print(graph)
+
+  matching = covering_matching(graph)
+  print(matching)

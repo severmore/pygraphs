@@ -91,6 +91,22 @@ class RemoveAddGraphTestCase(unittest.TestCase):
     self.assertListEqual(self.graph.edges, edgeslist_ref)
 
 
+
+class GraphUnionTestCase(unittest.TestCase):
+  
+  def setUp(self):
+    edges1 = [ (0, 1), (0, 3), (1, 0), (1, 2), (2, 0), (2, 3), (3, 2) ]
+    edges2 = [ (3, 1), (0, 2)]
+    self.graph1 = bgraphs.graph.Graph(edges=edges1)
+    self.graph2 = bgraphs.graph.Graph(edges=edges2)
+
+  def test_graph_union(self):
+    edges_ref = [[1, 3, 2], [0, 2], [0, 3], [2, 1]]
+    self.graph1.union(self.graph2)
+    self.assertListEqual(self.graph1.edges, edges_ref)
+
+
+
 class RemoveAddUDGraphTestCase(unittest.TestCase):
 
   def setUp(self):
@@ -111,6 +127,7 @@ class RemoveAddUDGraphTestCase(unittest.TestCase):
     self.assertListEqual(self.udgraph.edges, edgeslist_ref)
 
 
+
 @unittest.skip('Skip for performance sake')
 class VisingColoringTestCase(unittest.TestCase):
 
@@ -126,8 +143,7 @@ class VisingColoringTestCase(unittest.TestCase):
       if len(colorset) != len(graph.edges[start]):
         return False
     
-    return True
-    
+    return True 
 
   def test_vising_simple(self):
     EDGES = [(0,2), (0,3), (1,2), (1,3), (2,0), (2,1), (3,0), (3,1)]
@@ -140,6 +156,7 @@ class VisingColoringTestCase(unittest.TestCase):
                                       edge_prob=0.3)
     coloring = bgraphs.coloring.colorize(graph)
     self.assertTrue(self.validate_edge_coloring(coloring, graph))
+
 
 
 class EulerPartitionTestCase(unittest.TestCase):
@@ -170,6 +187,51 @@ class EulerPartitionTestCase(unittest.TestCase):
     g1, g2 = bgraphs.tools.euler_split(graph)
     self.assertListEqual(g1.edges, self.SPLIT[0])
     self.assertListEqual(g2.edges, self.SPLIT[1])
+
+
+
+class ColeHopcroftMatchingTestCase(unittest.TestCase):
+
+  EDGES = [ (0, 3), (3, 0), (0, 4), (4, 0),
+            (1, 3), (3, 1), (1, 4), (4, 1), (1, 5), (5, 1),
+            (2, 3), (3, 2)]
+
+  SPLIT = ([[4], [3], [], [1], [0], []], 
+           [[3], [5, 4], [3], [0, 2], [1], [1]])
+
+  MATCHING = [[4], [3], [], [1], [0], []]
+
+  def get_max_degree_vertices(self, graph):
+
+    return { v for v in graph.get_vertices() 
+                  if graph.degree(v) == graph.max_degree }
+
+  def is_matching_covers(self, matching, vertices):
+    pass
+
+
+  def test_covering_partition_simple(self):
+    g0 = bgraphs.graph.UDGraph(edges=self.EDGES)
+    max_g0 = self.get_max_degree_vertices(g0)
+
+    g1, g2 = bgraphs.tools._covering_partition(g0)
+    max_g1 = self.get_max_degree_vertices(g1)
+    max_g2 = self.get_max_degree_vertices(g2)
+
+    self.assertListEqual(g2.edges, self.SPLIT[1])
+    self.assertListEqual(g1.edges, self.SPLIT[0])
+    self.assertTrue(max_g0.issubset(max_g1))
+    self.assertTrue(max_g0.issubset(max_g2))
+
+  def test_covering_matching_simple(self):
+    graph = bgraphs.graph.UDGraph(edges=self.EDGES)
+    # max_graph = self.get_max_degree_vertices(graph)
+
+    matching = bgraphs.tools.covering_matching(graph)
+
+    self.assertListEqual(matching, self.MATCHING)
+
+
 
 if __name__ == '__main__':
 
