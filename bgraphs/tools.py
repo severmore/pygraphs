@@ -112,22 +112,3 @@ def euler_split(graph):
       v_prev = vertex
 
   return G1, G2
-
-
-if __name__ == '__main__':
-  
-  import bgraphs.graph
-
-  edges = [ (0, 3), (3, 0), (0, 4), (4, 0),
-            (1, 3), (3, 1), (1, 4), (4, 1), (1, 5), (5, 1),
-            (2, 3), (3, 2)]
-  graph = bgraphs.graph.UDGraph(edges=edges)
-
-  print(graph)
-  ep = euler_partition(graph)
-  print(ep)
-
-  g1, g2 = euler_split(bgraphs.graph.UDGraph(edges=edges))
-
-  print(g1, g2)
-
