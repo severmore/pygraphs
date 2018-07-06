@@ -91,6 +91,21 @@ class RemoveAddGraphTestCase(unittest.TestCase):
     self.assertListEqual(self.graph.edges, edgeslist_ref)
 
 
+class GraphUnionTestCase(unittest.TestCase):
+  
+  def setUp(self):
+    edges1 = [ (0, 1), (0, 3), (1, 0), (1, 2), (2, 0), (2, 3), (3, 2) ]
+    edges2 = [ (3, 1), (0, 2)]
+    self.graph1 = bgraphs.graph.Graph(edges=edges1)
+    self.graph2 = bgraphs.graph.Graph(edges=edges2)
+
+  def test_graph_union(self):
+    edges_ref = [[1, 3, 2], [0, 2], [0, 3], [2, 1]]
+    self.graph1.union(self.graph2)
+    self.assertListEqual(self.graph1.edges, edges_ref)
+
+
+
 class RemoveAddUDGraphTestCase(unittest.TestCase):
 
   def setUp(self):
