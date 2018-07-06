@@ -2,8 +2,6 @@
 Created by Ivanov Roman and Maxim Dudin. This module contains edge coloring
 algorithm implementation.
 
-TO: http://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
-
 https://github.com/severmore/pygraphs
 """
 
@@ -12,24 +10,34 @@ def colorize(graph, algorithm='Vising'):
   Perform minimal edge coloring on a bipartite graph.
 
   Args:
+
     graph(:obj:'Graph'): a graph which edges is to color. The algorithm assumes
         graph to be a bipartite without checking and keeping this property is 
         up to user.
     
-    algorithm(:obj:`str`, optinal): the algorithm to use for edge coloring.
+    algorithm(:obj:`str`, optinal): the algorithm to use for edge coloring. The
+        possible values are as follows: "Vising", "Cole-Hopcroft".
   
   Return:
+
     :obj:`dict` of (:obj:`turple` of int - int): - the resulting coloring of
         edges of a given graph.
   
   References:
+
     [1] Harold N. Gabow. Using Euler Partition to Edge Color Bipartite 
     Multigraphs // The International Journal of Computer and Information 
-    Sciences. Vol. 5, No. 4, 1976.
+    Sciences, Vol. 5, No. 4, 1976.
+
+    [2] Richard Cole, and John Hopcroft. On Edge Coloring Bipartite Graphs //
+    SIAM Journal on Computing, Vol. 11, No. 3, pp. 540-546, 1982.
 
   """
   if algorithm == 'Vising':
     return VisingColoring(graph)()
+  
+  elif algorithm == 'Cole-Hopcroft':
+    return ColeHopcroftColoring(graph)()
   
   return None
 
@@ -110,6 +118,7 @@ class VisingColoring:
 
       self.set_color(start, end, color)
 
+      # Building an alternating path.
       while vertex_next:
         
         self.set_color(vertex, vertex_next, color_next)
@@ -121,19 +130,34 @@ class VisingColoring:
 
     return self.color
 
+
+class ColeHopcroftColoring:
+
+  def __init__(self, graph):
+    self.graph = graph
+
+  def __call__(self):
+    return self.colorize()
+  
+  def colorize(self):
+    return None
+
+
+
+
 if __name__ == '__main__':
   import graph
-  import generating
+  # import generating
   # g = graph.Graph(edges=
   #     [(0,2), (0,3), (1,2), (1,3), (2,0), (2,1), (3,0), (3,1)]
   # )
   # print(g)
   # coloring = colorize(g)
   # print(coloring)
-
-  g = generating.bgraph(6)
+  
+  # g = generating.bgraph(6)
   # coloring = colorize(g)
   # print(g)
   # print(coloring)
 
-  print(colorize(g, algorithm='kray'))
+  # print(colorize(g, algorithm='kray'))

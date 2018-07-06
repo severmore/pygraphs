@@ -1,5 +1,6 @@
 import unittest
 import bgraphs.graph
+import bgraphs.tools
 import bgraphs.coloring
 import bgraphs.generating
 
@@ -70,7 +71,47 @@ class GraphCreationTestCase(unittest.TestCase):
     self.assertEqual(graph.max_degree, 2)
 
 
+class RemoveAddGraphTestCase(unittest.TestCase):
 
+  def setUp(self):
+    edges = [ (0, 1), (0, 3), (1, 0), (1, 2), (2, 0), (2, 3), (3, 2) ]
+    self.graph = bgraphs.graph.Graph(edges=edges)
+
+  def test_removing_edge(self):
+    edges_ref = [ (0, 3), (1, 0), (1, 2), (2, 0), (2, 3), (3, 2) ]
+    edgeslist_ref = bgraphs.graph.Graph(edges=edges_ref).edges
+    self.graph.remove_edge(0, 1)
+    self.assertListEqual(self.graph.edges, edgeslist_ref)
+
+  def test_addition_edge(self):
+    edges_ref = [ (0, 1), (0, 3), (1, 0), (1, 2), (2, 0), (2, 3), (3, 2),
+                  (3, 2) ]
+    edgeslist_ref = bgraphs.graph.Graph(edges=edges_ref).edges
+    self.graph.add_edge(3, 2)
+    self.assertListEqual(self.graph.edges, edgeslist_ref)
+
+
+class RemoveAddUDGraphTestCase(unittest.TestCase):
+
+  def setUp(self):
+    edges = [ (0, 1), (0, 3), (1, 0), (1, 2), (2, 0), (2, 3), (3, 2) ]
+    self.udgraph = bgraphs.graph.UDGraph(edges=edges)
+
+  def test_removing_edge(self):
+    edges_ref = [ (0, 3), (1, 2), (2, 0), (2, 3), (3, 2) ]
+    edgeslist_ref = bgraphs.graph.UDGraph(edges=edges_ref).edges
+    self.udgraph.remove_edge(0, 1)
+    self.assertListEqual(self.udgraph.edges, edgeslist_ref)
+
+  def test_addition_edge(self):
+    edges_ref = [ (0, 1), (0, 3), (1, 0), (1, 2), (2, 0), (2, 3), (3, 2),
+                  (3, 2), (2, 3) ]
+    edgeslist_ref = bgraphs.graph.UDGraph(edges=edges_ref).edges
+    self.udgraph.add_edge(3, 2)
+    self.assertListEqual(self.udgraph.edges, edgeslist_ref)
+
+
+@unittest.skip('Skip for performance sake')
 class VisingColoringTestCase(unittest.TestCase):
 
   def validate_edge_coloring(self, coloring, graph):
@@ -100,6 +141,35 @@ class VisingColoringTestCase(unittest.TestCase):
     coloring = bgraphs.coloring.colorize(graph)
     self.assertTrue(self.validate_edge_coloring(coloring, graph))
 
+
+class EulerPartitionTestCase(unittest.TestCase):
+
+  EDGES = [ (0, 3), (3, 0), (0, 4), (4, 0),
+            (1, 3), (3, 1), (1, 4), (4, 1), (1, 5), (5, 1),
+            (2, 3), (3, 2)]
+    
+  PARTITION = [[5, 1, 3, 0, 4, 1], 
+               [3, 2]]
+
+  SPLIT = ([[4], [3], [], [1], [0], []], 
+           [[3], [5, 4], [3], [0, 2], [1], [1]])
+  
+  def validate_split(self):
+    pass
+
+  def validate_partition(self):
+    pass
+    
+  def test_euler_partition_simple(self):
+    graph = bgraphs.graph.UDGraph(edges=self.EDGES)
+    ep = bgraphs.tools.euler_partition(graph)
+    self.assertListEqual(ep, self.PARTITION)
+
+  def test_euler_split_simple(self):
+    graph = bgraphs.graph.UDGraph(edges=self.EDGES)
+    g1, g2 = bgraphs.tools.euler_split(graph)
+    self.assertListEqual(g1.edges, self.SPLIT[0])
+    self.assertListEqual(g2.edges, self.SPLIT[1])
 
 if __name__ == '__main__':
 
