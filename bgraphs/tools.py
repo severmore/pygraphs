@@ -3,7 +3,6 @@ Created by Ivanov Roman and Maxim Dudin.
 
 https://github.com/severmore/pygraphs
 """
-import bgraphs.graph
 from collections import deque
 
 def euler_partition(graph, sustain_graph=False):
@@ -50,8 +49,6 @@ def euler_partition(graph, sustain_graph=False):
     else:
       queue.appendleft(vertex)
 
-  print(f'Q: {queue}')
-
   while queue:
     start = queue.pop()
 
@@ -78,18 +75,59 @@ def euler_partition(graph, sustain_graph=False):
 
 
 def euler_split(graph):
+  """
+  Returns an Euler split of a graph. An Euler split is two subgraphs of the
+  initial graph such that the set of both subgraphs vertices remains unchanged,
+  the edges of the graph is a disjoint union of subgraphs edges and these 
+  obtains by alteranatively placing the edges of the paths in the Euler 
+  partition of the graph to the subgraphs.
+
+  Args:
+    graph(:obj:`Graph`) - a graph to split
+
+  Returns:
+    graph(:obj:`Graph`), graph(:obj:`Graph`) - two subraphs of `graph`.
+  
+  References:
+    [1] Harold N. Gabow. Using Euler Partition to Edge Color Bipartite 
+    Multigraphs // The International Journal of Computer and Information 
+    Sciences, Vol. 5, No. 4, 1976.
+  """
+
+  G1 = graph.__class__(vertices_num=graph.vertices_num)
+  G2 = graph.__class__(vertices_num=graph.vertices_num)
 
   partition = euler_partition(graph)
 
+  for path in partition:
+    v_prev, path = path[0], path[1:]
 
-  return None
+    for index, vertex in enumerate(path):
+
+      if index % 2:
+        G1.add_edge(v_prev, vertex)
+      else:
+        G2.add_edge(v_prev, vertex)
+
+      v_prev = vertex
+
+  return G1, G2
+
 
 if __name__ == '__main__':
-  edges = [ (0, 1), (0, 3), (1, 0), (1, 2), (2, 0), (2, 3), (3, 2) ]
-  graph = bgraphs.graph.Graph(edges=edges)
+  
+  import bgraphs.graph
+
+  edges = [ (0, 3), (3, 0), (0, 4), (4, 0),
+            (1, 3), (3, 1), (1, 4), (4, 1), (1, 5), (5, 1),
+            (2, 3), (3, 2)]
+  graph = bgraphs.graph.UDGraph(edges=edges)
 
   print(graph)
-
   ep = euler_partition(graph)
-
   print(ep)
+
+  g1, g2 = euler_split(bgraphs.graph.UDGraph(edges=edges))
+
+  print(g1, g2)
+
