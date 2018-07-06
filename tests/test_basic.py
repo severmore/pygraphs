@@ -82,6 +82,13 @@ class RemoveAddGraphTestCase(unittest.TestCase):
     self.graph.remove_edge(0, 1)
     self.assertListEqual(self.graph.edges, edgeslist_ref)
 
+  def test_addition_edge(self):
+    edges_ref = [ (0, 1), (0, 3), (1, 0), (1, 2), (2, 0), (2, 3), (3, 2),
+                  (3, 2) ]
+    edgeslist_ref = bgraphs.graph.Graph(edges=edges_ref).edges
+    self.graph.add_edge(3, 2)
+    self.assertListEqual(self.graph.edges, edgeslist_ref)
+
 
 class RemoveAddUDGraphTestCase(unittest.TestCase):
 
@@ -93,6 +100,13 @@ class RemoveAddUDGraphTestCase(unittest.TestCase):
     edges_ref = [ (0, 3), (1, 2), (2, 0), (2, 3), (3, 2) ]
     edgeslist_ref = bgraphs.graph.UDGraph(edges=edges_ref).edges
     self.udgraph.remove_edge(0, 1)
+    self.assertListEqual(self.udgraph.edges, edgeslist_ref)
+
+  def test_addition_edge(self):
+    edges_ref = [ (0, 1), (0, 3), (1, 0), (1, 2), (2, 0), (2, 3), (3, 2),
+                  (3, 2), (2, 3) ]
+    edgeslist_ref = bgraphs.graph.UDGraph(edges=edges_ref).edges
+    self.udgraph.add_edge(3, 2)
     self.assertListEqual(self.udgraph.edges, edgeslist_ref)
 
 

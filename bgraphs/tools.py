@@ -24,7 +24,7 @@ def euler_partition(graph, sustain_graph=False):
   Args:
     graph(:obj:`Graph`) - a graph for which a partition is to find.
 
-    sustain_graph(bool) - if you would like to keep
+    sustain_graph(bool) - if it is set to True graph edges will be copied.
   
   Return:
     :obj:`list` of :obj:`list` of int: an Euler partition representation that 
@@ -36,6 +36,9 @@ def euler_partition(graph, sustain_graph=False):
     Multigraphs // The International Journal of Computer and Information 
     Sciences, Vol. 5, No. 4, 1976.
   """
+  if sustain_graph:
+    pass
+
   partition = list()
 
   # Populate Q in reverse order comparing to [1]
@@ -75,6 +78,10 @@ def euler_partition(graph, sustain_graph=False):
 
 
 def euler_split(graph):
+
+  partition = euler_partition(graph)
+
+
   return None
 
 if __name__ == '__main__':

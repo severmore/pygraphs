@@ -106,6 +106,12 @@ class Graph:
     self.edges[start].remove(end)
 
 
+  def add_edge(self, start, end):
+    """ Add an edge to a graph. It is assumed no new vertex is added and
+    `max_degree` is not updated. """
+    self.edges[start].append(end)
+
+
 class UDGraph(Graph):
   """ A class for undirected graphs. """
 
@@ -114,6 +120,13 @@ class UDGraph(Graph):
     `max_degree` is not updated. """
     self.edges[start].remove(end)
     self.edges[end].remove(start)
+
+
+  def add_edge(self, start, end):
+    """ Add an edge to a graph. It is assumed no new vertex is added and
+    `max_degree` is not updated. """
+    self.edges[start].append(end)
+    self.edges[end].append(start)
 
 
 if __name__ == '__main__':
