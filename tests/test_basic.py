@@ -225,7 +225,7 @@ class ColeHopcroftMatchingTestCase(unittest.TestCase):
 
   def test_covering_matching_simple(self):
     graph = bgraphs.graph.UDGraph(edges=self.EDGES)
-    max_graph = self.get_max_degree_vertices(graph)
+    # max_graph = self.get_max_degree_vertices(graph)
 
     matching = bgraphs.tools.covering_matching(graph)
 
