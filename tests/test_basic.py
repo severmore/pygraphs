@@ -199,10 +199,15 @@ class ColeHopcroftMatchingTestCase(unittest.TestCase):
   SPLIT = ([[4], [3], [], [1], [0], []], 
            [[3], [5, 4], [3], [0, 2], [1], [1]])
 
+  MATCHING = [[4], [3], [], [1], [0], []]
+
   def get_max_degree_vertices(self, graph):
 
     return { v for v in graph.get_vertices() 
                   if graph.degree(v) == graph.max_degree }
+
+  def is_matching_covers(self, matching, vertices):
+    pass
 
 
   def test_covering_partition_simple(self):
@@ -217,6 +222,14 @@ class ColeHopcroftMatchingTestCase(unittest.TestCase):
     self.assertListEqual(g1.edges, self.SPLIT[0])
     self.assertTrue(max_g0.issubset(max_g1))
     self.assertTrue(max_g0.issubset(max_g2))
+
+  def test_covering_matching_simple(self):
+    graph = bgraphs.graph.UDGraph(edges=self.EDGES)
+    max_graph = self.get_max_degree_vertices(graph)
+
+    matching = bgraphs.tools.covering_matching(graph)
+
+    self.assertListEqual(matching, self.MATCHING)
 
 
 

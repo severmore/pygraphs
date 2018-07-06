@@ -83,10 +83,11 @@ def euler_split(graph):
   partition of the graph to the subgraphs.
 
   Args:
-    graph(:obj:`Graph`) - a graph to split
+    graph(:obj:`Graph`) - a graph for which a matching covering maximum degree
+        vertices is need to find.
 
   Returns:
-    graph(:obj:`Graph`), graph(:obj:`Graph`) - two subraphs of `graph`.
+    :obj:`list` of :obj:`turple` of int - a matching to find as a list of edges.
   
   References:
     [1] Harold N. Gabow. Using Euler Partition to Edge Color Bipartite 
@@ -117,10 +118,6 @@ def euler_split(graph):
   return G1, G2
 
 
-def find_covering_matching(graph):
-  pass
-
-
 def _covering_partition(graph):
   """ 
   Finds Cole-Hopcroft graph partition - a partition into two subgraphs such that
@@ -137,7 +134,7 @@ def _covering_partition(graph):
     graph(:obj:`Graph`) - a graph to split
 
   Returns:
-    graph(:obj:`Graph`), graph(:obj:`Graph`) - two subraphs of `graph`.
+    :obj:`Graph`, :obj:`Graph` - two subraphs of `graph`.
 
   References:
     [2] Richard Cole, and John Hopcroft. On Edge Coloring Bipartite Graphs //
@@ -201,6 +198,32 @@ def _covering_partition(graph):
   return H1, H2
 
 
+def covering_matching(graph):
+  """ 
+  Finds matching covering maximum degree vertices of a graph. The matching is a
+  subset of a graph edges such that no two edges have common vertex. It is said
+  that matching covers a set of vertices, if for all vertex from this set there
+  is an edge from matching that contains this vertex.
+
+  Args:
+    graph(:obj:`Graph`) - a graph to split
+
+  Returns:
+    graph(:obj:`Graph`), graph(:obj:`Graph`) - two subraphs of `graph`.
+
+  References:
+    [2] Richard Cole, and John Hopcroft. On Edge Coloring Bipartite Graphs //
+    SIAM Journal on Computing, Vol. 11, No. 3, pp. 540-546, 1982.
+  """
+  while graph.max_degree > 1:
+    
+    G1, G2 = _covering_partition(graph)
+
+    graph = G1 if G1.max_degree < G2.max_degree else G1
+
+  return graph.edges
+
+
 if __name__ == '__main__':
 
   import bgraphs.graph
@@ -211,7 +234,6 @@ if __name__ == '__main__':
   
   graph = bgraphs.graph.UDGraph(edges=EDGES)
   print(graph)
-  g1, g2 = _covering_partition(graph)
 
-  print(g1)
-  print(g2)
+  matching = covering_matching(graph)
+  print(matching)
