@@ -134,17 +134,3 @@ class UDGraph(Graph):
     `max_degree` is not updated. """
     self.edges[start].append(end)
     self.edges[end].append(start)
-
-
-if __name__ == '__main__':
-  edges1 = [ (0, 1), (0, 3), (1, 0), (1, 2), (2, 0), (2, 3), (3, 2) ]
-  edges2 = [ (3, 1), (0, 2)]
-  graph1 = Graph(edges=edges1)
-  graph2 = Graph(edges=edges2)
-
-  print(graph1)
-  print(graph2)
-
-  graph1.union(graph2)
-
-  print(graph1)
