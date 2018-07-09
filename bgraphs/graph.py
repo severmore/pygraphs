@@ -16,8 +16,9 @@ class Graph:
       array
 
   Attributes:
-      edges (:obj:`list` of :obj:`list` of int): a list of incidences.
-
+      edges (:obj:`list` of :obj:`list` of int) - a list of incidences.
+      vertices_num (int) - a number of vertices
+      max_degree (int) - a maximum degree of vertices of a graph
   """
 
   def __init__(self, edges=None, graph=None, vertices_num=0):
@@ -71,8 +72,16 @@ class Graph:
     self.update_max_degree()
 
 
+  def __eq__(self, other):
+    return self.edges.sort() == other.edges.sort()
+
+
   def __str__(self):
-    return str(self.edges)
+    klass_name = self.__class__.__name__.lower()
+    edges_str = ', '.join(
+        [ f'[{v}]-{inc}' for v, inc in enumerate(self.edges) ]
+    )
+    return f'{klass_name}({edges_str})'
 
 
   def __repr__(self):
@@ -119,8 +128,64 @@ class Graph:
       self.edges[start].extend(incidence)
 
 
+
 class UDGraph(Graph):
-  """ A class for undirected graphs. """
+  """
+  A  class for undirected graphs for using in the algorithms of this package. It
+   is intended to use in these algos. The vertices of this graph represented by 
+  aconsecutive integer numbers, end the edges -- as a list of incidence.
+
+  Note:
+      In this implementation as a list used python list that is actually an 
+      array
+
+  Attributes:
+      edges (:obj:`list` of :obj:`list` of int) - a list of incidences.
+      vertices_num (int) - a number of vertices
+      max_degree (int) - a maximum degree of vertices of a graph
+  """
+
+  def __init__(self, edges=None, graph=None, vertices_num=0):
+    """
+    Create a new undirected graph object. If none of arguments are given an 
+    empty graph will be created.
+
+    Keyword args:
+
+      edges (:obj:`list` of :obj:`turple` of int, optional): a list of edges 
+          each element of which is a tuple of size two: (start - end). For 
+          convenience sake the edge, specified as (start-end), is duplicated by
+          an edge (end-start). Default to None.
+    
+      graph (:obj:`Graph`, optional): a graph which edges will be copied to a 
+          new graph. If `edges` and `graph` are both not None then the edges of 
+          a newly created graph will contains both `graph` edges and 'edges'. 
+          Default to None.
+
+      vertices_num (int, optional): the intended number of vertices in a graph 
+          created. If it is not specified it will be obtained from `edges` and 
+          'graph' as a maximum of values of vertex identifiers in these 
+          variables. The parameter is used to speed up. Default to 0.
+    
+    Note:
+      due to implementation of Graph base class for an undirected graph each 
+      edge (start, end) is duplicated by an edge (end, start). Further work with
+      the graph is assumed to treat this pair as a single edge.
+    """
+    if edges:
+      edges_dup = [(end, start) for start, end in edges]
+      edges.extend(edges_dup)
+    
+    if graph and isinstance(graph, Graph) and graph.edges:
+      edges_graph_dup = [(end, start) for start, end in graph.edges]
+
+      if edges:
+        edges.extend(edges_graph_dup)
+      else:
+        edges = edges_graph_dup
+
+    super().__init__(edges=edges, graph=graph, vertices_num=vertices_num)
+
 
   def remove_edge(self, start, end):
     """ Remove an edge from the graph. It is assumed no vertex is deleted and 
@@ -134,3 +199,17 @@ class UDGraph(Graph):
     `max_degree` is not updated. """
     self.edges[start].append(end)
     self.edges[end].append(start)
+
+
+if __name__ == '__main__':
+  udgraph = UDGraph(edges=[ (0, 1), (0, 3), (1, 2), (2, 0), (2, 3) ])
+  graph = Graph(edges=[ (0, 1), (0, 3), (1, 2), (2, 0), (2, 3) ])
+  print(graph)
+  print(udgraph)
+
+  graph_eval = UDGraph()
+  graph_eval.edges = eval(repr(graph))
+
+  print('graph', graph)
+  print('repr', repr(graph))
+  print('eval', graph_eval == graph)
