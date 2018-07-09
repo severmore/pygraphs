@@ -28,7 +28,7 @@ class GraphCreationTestCase(unittest.TestCase):
     graph = bgraphs.graph.Graph(graph=graph_origin)
     self.assertIsNotNone(graph)
     self.assertListEqual(graph.edges, self.EDGES_INCIDENCE)
-    self.assertNotEqual(graph, graph_origin)
+    self.assertEqual(graph, graph_origin)
     self.assertEqual(graph.max_degree, 2)
   
   def test_graph_creation_by_edges_and_graph_when_graph_has_more_vertices(self):
@@ -69,9 +69,42 @@ class GraphCreationTestCase(unittest.TestCase):
     self.assertIsNotNone(graph)
     self.assertListEqual(graph.edges, self.EDGES_INCIDENCE)
     self.assertEqual(graph.max_degree, 2)
+  
+  def test_graph_creation_by_representation(self):
+    import ast
+    graph_origin = bgraphs.graph.Graph(edges=self.EDGES_LIST)
+    graph_restored = bgraphs.graph.Graph()
+    graph_restored.edges = ast.literal_eval(repr(graph_origin))
+    self.assertTrue(graph_origin == graph_restored)
 
 
-class RemoveAddGraphTestCase(unittest.TestCase):
+
+class UndirectedGraphCreationTest(unittest.TestCase):
+  """ Test undirected graph creation """
+
+  EDGES_LIST = [ (0, 1), (0, 3), (1, 2), (2, 0), (2, 3) ]
+  INCIDENCE  = [[1, 3, 2], [2, 4, 0], [0, 3, 4, 1], [0, 2], [1, 2]]
+
+  def test_undirected_graph_creation_with_graph_specified(self):
+    graph_origin = bgraphs.graph.Graph(edges=self.EDGES_LIST)
+    graph = bgraphs.graph.UDGraph(graph=graph_origin, edges=[(4,1), (4,2)])
+    self.assertIsNotNone(graph)
+    self.assertListEqual(graph.edges, self.INCIDENCE)
+    self.assertEqual(graph.max_degree, 4)
+
+  def test_undirected_graph_creation_with_undirected_graph_specified(self):
+    graph_origin = bgraphs.graph.UDGraph(edges=self.EDGES_LIST)
+    graph = bgraphs.graph.UDGraph(graph=graph_origin, edges=[(4,1), (4,2)])
+    graph_ref = bgraphs.graph.UDGraph()
+    graph_ref.edges = self.INCIDENCE
+    self.assertIsNotNone(graph)
+    self.assertEqual(graph, graph_ref)
+    self.assertEqual(graph.max_degree, 4)
+
+
+
+class RemoveAddEdgesGraphTestCase(unittest.TestCase):
+  """ Test addition and removing edges to an arbitrary graph. """
 
   def setUp(self):
     edges = [ (0, 1), (0, 3), (1, 0), (1, 2), (2, 0), (2, 3), (3, 2) ]
@@ -93,6 +126,7 @@ class RemoveAddGraphTestCase(unittest.TestCase):
 
 
 class GraphUnionTestCase(unittest.TestCase):
+  """ Test union of two graphs. """
   
   def setUp(self):
     edges1 = [ (0, 1), (0, 3), (1, 0), (1, 2), (2, 0), (2, 3), (3, 2) ]
@@ -108,62 +142,76 @@ class GraphUnionTestCase(unittest.TestCase):
 
 
 class RemoveAddUDGraphTestCase(unittest.TestCase):
+  """ Test addition and removing edges to an undirected graph. """
 
   def setUp(self):
-    edges = [ (0, 1), (0, 3), (1, 0), (1, 2), (2, 0), (2, 3), (3, 2) ]
+    edges = [ (0, 1), (0, 2), (0, 3), (1, 2), (2, 3) ]
     self.udgraph = bgraphs.graph.UDGraph(edges=edges)
 
   def test_removing_edge(self):
-    edges_ref = [ (0, 3), (1, 2), (2, 0), (2, 3), (3, 2) ]
-    edgeslist_ref = bgraphs.graph.UDGraph(edges=edges_ref).edges
+    edges_ref = [ (0, 2), (0, 3), (1, 2), (2, 3)  ]
+    undgraph_ref = bgraphs.graph.UDGraph(edges=edges_ref)
     self.udgraph.remove_edge(0, 1)
-    self.assertListEqual(self.udgraph.edges, edgeslist_ref)
+    self.assertEqual(self.udgraph, undgraph_ref)
 
   def test_addition_edge(self):
-    edges_ref = [ (0, 1), (0, 3), (1, 0), (1, 2), (2, 0), (2, 3), (3, 2),
-                  (3, 2), (2, 3) ]
-    edgeslist_ref = bgraphs.graph.UDGraph(edges=edges_ref).edges
-    self.udgraph.add_edge(3, 2)
-    self.assertListEqual(self.udgraph.edges, edgeslist_ref)
+    edges_ref = [ (0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3) ]
+    undgraph_ref = bgraphs.graph.UDGraph(edges=edges_ref)
+    self.udgraph.add_edge(3, 1)
+    self.assertEqual(self.udgraph, undgraph_ref)
 
 
 
-@unittest.skip('Skip for performance sake')
-class VisingColoringTestCase(unittest.TestCase):
+def validate_coloring(coloring, graph):
+  """ Check if edge coloring is valid. """
 
-  def validate_edge_coloring(self, coloring, graph):
-    """ Check if edge coloring is valid. """
-
-    print(graph)
-    print(coloring)
+  for start, incidents in enumerate(graph.edges):
+    colorset = { coloring[start, end] for end in incidents }
     
-    for start, incidents in enumerate(graph.edges):
-      colorset = { coloring[start, end] for end in incidents }
-      
-      if len(colorset) != len(graph.edges[start]):
-        return False
-    
-    return True 
+    if len(colorset) != len(graph.edges[start]):
+      return False
+  
+  return True 
 
-  def test_vising_simple(self):
+
+
+class VisingColoringTestCase(unittest.TestCase): 
+
+  def test_vising_coloring_arbitrary_graph_simple(self):
     EDGES = [(0,2), (0,3), (1,2), (1,3), (2,0), (2,1), (3,0), (3,1)]
     graph = bgraphs.graph.Graph(edges=EDGES)
     coloring = bgraphs.coloring.colorize(graph)
-    self.assertTrue(self.validate_edge_coloring(coloring, graph))
+    self.assertTrue(validate_coloring(coloring, graph))
+
+  def test_vising_coloring_undirected_graph_simple(self):
+    EDGES = [ (0,2), (0,3), (1,2), (1,3) ]
+    graph = bgraphs.graph.UDGraph(edges=EDGES)
+    coloring = bgraphs.coloring.colorize(graph)
+    self.assertTrue(validate_coloring(coloring, graph))
   
-  def test_vising_generated(self):
+  @unittest.skip('skip for a while')
+  def test_vising_coloring_generated(self):
     graph = bgraphs.generating.bgraph(20, vratio_low=.4, vratio_high=.6, 
                                       edge_prob=0.3)
     coloring = bgraphs.coloring.colorize(graph)
-    self.assertTrue(self.validate_edge_coloring(coloring, graph))
+    self.assertTrue(validate_coloring(coloring, graph))
+
+
+
+class ColeHopcroftColoringTestCase(unittest.TestCase):
+
+  def test_cole_hopcoft_coloring_simple(self):
+    EDGES = [(0,2), (0,3), (1,2), (1,3)]
+    graph = bgraphs.graph.UDGraph(edges=EDGES)
+    coloring = bgraphs.coloring.colorize(graph, algorithm='Cole-Hopcroft')
+    self.assertTrue(validate_coloring(coloring, graph))
+
 
 
 
 class EulerPartitionTestCase(unittest.TestCase):
 
-  EDGES = [ (0, 3), (3, 0), (0, 4), (4, 0),
-            (1, 3), (3, 1), (1, 4), (4, 1), (1, 5), (5, 1),
-            (2, 3), (3, 2)]
+  EDGES = [ (0, 3), (0, 4), (1, 3), (1, 4), (1, 5), (2, 3) ]
     
   PARTITION = [[5, 1, 3, 0, 4, 1], 
                [3, 2]]
@@ -192,9 +240,7 @@ class EulerPartitionTestCase(unittest.TestCase):
 
 class ColeHopcroftMatchingTestCase(unittest.TestCase):
 
-  EDGES = [ (0, 3), (3, 0), (0, 4), (4, 0),
-            (1, 3), (3, 1), (1, 4), (4, 1), (1, 5), (5, 1),
-            (2, 3), (3, 2)]
+  EDGES = [ (0, 3), (0, 4), (1, 3), (1, 4), (1, 5), (2, 3) ]
 
   SPLIT = ([[4], [3], [], [1], [0], []], 
            [[3], [5, 4], [3], [0, 2], [1], [1]])
@@ -211,7 +257,10 @@ class ColeHopcroftMatchingTestCase(unittest.TestCase):
 
 
   def test_covering_partition_simple(self):
+
+    print(self.EDGES)
     g0 = bgraphs.graph.UDGraph(edges=self.EDGES)
+    print(self.EDGES)
     max_g0 = self.get_max_degree_vertices(g0)
 
     g1, g2 = bgraphs.tools._covering_partition(g0)
@@ -227,9 +276,10 @@ class ColeHopcroftMatchingTestCase(unittest.TestCase):
     graph = bgraphs.graph.UDGraph(edges=self.EDGES)
     # max_graph = self.get_max_degree_vertices(graph)
 
-    matching = bgraphs.tools.covering_matching(graph)
+    matching, rest = bgraphs.tools.covering_matching(graph)
+    print('rest', repr(rest))
 
-    self.assertListEqual(matching, self.MATCHING)
+    self.assertListEqual(matching.edges, self.MATCHING)
 
 
 

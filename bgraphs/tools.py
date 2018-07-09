@@ -198,42 +198,91 @@ def _covering_partition(graph):
   return H1, H2
 
 
-def covering_matching(graph):
+def covering_matching(graph, sustain_graph=True):
   """ 
   Finds matching covering maximum degree vertices of a graph. The matching is a
   subset of a graph edges such that no two edges have common vertex. It is said
   that matching covers a set of vertices, if for all vertex from this set there
   is an edge from matching that contains this vertex.
 
+  After finishing this method all edges of an initial graph will be removed as 
+  the algorithm supposes. If it is necessary to keep graph edges set 
+  `sustain_graph` to True, and the method return both matching edges and the 
+  rest part of the edges. If one need to recover the initial graph just union
+  this edges into a single graph.
+
   Args:
     graph(:obj:`Graph`) - a graph to split
 
+    sustain_graph(bool) - if it is set to True graph edges excluding the edges
+    of matching found will be returned.
+
   Returns:
-    graph(:obj:`Graph`), graph(:obj:`Graph`) - two subraphs of `graph`.
+    :obj:`list` of :obj:`list` of int, :obj:`Graph` - a matching and the rest of
+        `graph` if `sustain_graph` is set to True.
+
+    :obj:`list` of :obj:`list` of int - a matching found if `sustain_graph` 
+        is set to False.
 
   References:
     [2] Richard Cole, and John Hopcroft. On Edge Coloring Bipartite Graphs //
     SIAM Journal on Computing, Vol. 11, No. 3, pp. 540-546, 1982.
   """
-  while graph.max_degree > 1:
+  if sustain_graph:
+
+    matching, rest = graph, graph.__class__()
+
+    # The first iteration of cycle is individually coded to avoid superfluous
+    # coping of graph edges to `rest`.
+    if matching.max_degree > 1:
+      matching, rest = _covering_partition(matching)
+
+      if matching.max_degree > matching.max_degree:
+        matching, rest = rest, matching
+
+    while matching.max_degree > 1:
+      G1, G2 = _covering_partition(matching)
+
+      if G1.max_degree < G2.max_degree:
+        matching = G1
+        rest.union(G2)
+      else:
+        matching = G2
+        rest.union(G1)
+      
+    return matching, rest
+  
+  else:
+
+    matching = graph
+
+    while matching.max_degree > 1:      
+      G1, G2 = _covering_partition(matching)
+
+      if G1.max_degree < G2.max_degree:
+        matching = G1
+      else:
+        matching = G2
     
-    G1, G2 = _covering_partition(graph)
-
-    graph = G1 if G1.max_degree < G2.max_degree else G1
-
-  return graph.edges
+    return matching
 
 
 if __name__ == '__main__':
 
   import bgraphs.graph
 
-  EDGES = [ (0, 3), (3, 0), (0, 4), (4, 0),
-          (1, 3), (3, 1), (1, 4), (4, 1), (1, 5), (5, 1),
-          (2, 3), (3, 2)]
-  
-  graph = bgraphs.graph.UDGraph(edges=EDGES)
-  print(graph)
+  graph = bgraphs.graph.UDGraph(edges=
+      [ (0, 3), (0, 4), (1, 3), (1, 4), (1, 5), (2, 3)])
+  print('graph: ', graph)
 
-  matching = covering_matching(graph)
-  print(matching)
+  matching, rest = covering_matching(graph)
+  print('matching: ', matching)
+  print('rest: ', repr(rest))
+
+  rest.union(matching)
+  graph = bgraphs.graph.UDGraph(edges=
+      [ (0, 3), (0, 4), (1, 3), (1, 4), (1, 5), (2, 3)])
+
+  print('restored: ', rest)
+  print('equality of rest and graph: ', rest == graph)
+  

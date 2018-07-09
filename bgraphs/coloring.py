@@ -131,33 +131,47 @@ class VisingColoring:
     return self.color
 
 
+
+import bgraphs.tools
+
 class ColeHopcroftColoring:
 
   def __init__(self, graph):
     self.graph = graph
+    self.coloring = list()
 
   def __call__(self):
-    return self.colorize()
+    return self.colorize(self.graph)
   
-  def colorize(self):
-    return None
+  def colorize(self, graph):
 
+    if graph.max_degree % 2:
+      
+      if graph.max_degree == 1:
+        self.coloring.append(graph)
+      
+      else:
+        matching, rest = bgraphs.tools.covering_matching(graph)
+        self.coloring.append(matching)
+        self.colorize(rest)
+    
+    else:
+
+      one, two = bgraphs.tools.euler_split(graph)
+      self.colorize(one)
+      self.colorize(two)
+
+    return self.coloring
 
 
 
 if __name__ == '__main__':
-  import graph
-  # import generating
-  # g = graph.Graph(edges=
-  #     [(0,2), (0,3), (1,2), (1,3), (2,0), (2,1), (3,0), (3,1)]
-  # )
-  # print(g)
-  # coloring = colorize(g)
-  # print(coloring)
-  
-  # g = generating.bgraph(6)
-  # coloring = colorize(g)
-  # print(g)
-  # print(coloring)
+  import bgraphs.graph
+  graph = bgraphs.graph.UDGraph(edges=
+      [ (0, 3), (0, 4), (1, 3), (1, 4), (1, 5), (2, 3)])
 
-  # print(colorize(g, algorithm='kray'))
+  print(graph)
+
+  coloring = colorize(graph, algorithm='Cole-Hopcroft')
+
+  print(coloring)
