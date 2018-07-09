@@ -71,9 +71,10 @@ class GraphCreationTestCase(unittest.TestCase):
     self.assertEqual(graph.max_degree, 2)
   
   def test_graph_creation_by_representation(self):
+    import ast
     graph_origin = bgraphs.graph.Graph(edges=self.EDGES_LIST)
     graph_restored = bgraphs.graph.Graph()
-    graph_restored.edges = eval(repr(graph_origin))
+    graph_restored.edges = ast.literal_eval(repr(graph_origin))
     self.assertTrue(graph_origin == graph_restored)
 
 

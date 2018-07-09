@@ -16,7 +16,9 @@ class Graph:
 
   Attributes:
       edges (:obj:`list` of :obj:`list` of int) - a list of incidences.
+
       vertices_num (int) - a number of vertices
+
       max_degree (int) - a maximum degree of vertices of a graph
   """
 
@@ -73,7 +75,7 @@ class Graph:
 
   def __eq__(self, other):
     from collections import Counter
-    
+
     return all([ Counter(i_s) == Counter(i_o) 
                    for i_s, i_o in zip(self.edges, other.edges)])
 
@@ -135,16 +137,12 @@ class UDGraph(Graph):
   """
   A  class for undirected graphs for using in the algorithms of this package. It
    is intended to use in these algos. The vertices of this graph represented by 
-  aconsecutive integer numbers, end the edges -- as a list of incidence.
+  a consecutive integer numbers, end the edges -- as a list of incidence. The 
+  class is a subclass of `Graph` class.
 
   Note:
       In this implementation as a list used python list that is actually an 
       array
-
-  Attributes:
-      edges (:obj:`list` of :obj:`list` of int) - a list of incidences.
-      vertices_num (int) - a number of vertices
-      max_degree (int) - a maximum degree of vertices of a graph
   """
 
   def __init__(self, edges=None, graph=None, vertices_num=0):
@@ -180,7 +178,7 @@ class UDGraph(Graph):
       for start, end in edges:
         self.edges[end].append(start)
     
-    if type(graph) == Graph:
+    if graph.__class__ == Graph:
       for start, incidence in enumerate(graph.edges):
         for end in incidence:
           self.edges[end].append(start)
@@ -210,10 +208,3 @@ if __name__ == '__main__':
   print(repr(graph))
   print(repr(udgraph))
   print(repr(udgraph2))
-
-  graph_eval = UDGraph()
-  graph_eval.edges = eval(repr(graph))
-
-  print('graph', graph)
-  print('repr', repr(graph))
-  print('eval', graph_eval == graph)
