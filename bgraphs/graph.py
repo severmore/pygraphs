@@ -4,7 +4,6 @@ structure describing graphs in this package.
 
 https://github.com/severmore/pygraphs
 """
-
 class Graph:
   """
   A graph representation used in the algorithms of this package. It is intended
@@ -46,24 +45,24 @@ class Graph:
     if not vertices_num:
       # As a set of vertices represented as a consequtive integer number it's
       # sufficient to find the gretest one in the list given
-      if edges is not None:
+      if edges:
         vertices_num = max(max(edges, key=lambda x: max(x[0], x[1]))) + 1
       
       # In the graph object vertices is already structed into the list
-      if graph is not None:
+      if graph:
         v_max = len(graph.edges)
         
         if v_max > vertices_num:
           vertices_num = v_max
     
     self.vertices_num = vertices_num
-    self.edges = [[] for _ in range(vertices_num)]
+    self.edges = [[] for _ in self.get_vertices()]
 
-    if edges is not None:
+    if edges:
       for start, end in edges:
         self.edges[start].append(end)
 
-    if graph is not None:
+    if graph:
       for start, ends in enumerate(graph.edges):
         self.edges[start].extend(ends)
     
@@ -73,7 +72,10 @@ class Graph:
 
 
   def __eq__(self, other):
-    return self.edges.sort() == other.edges.sort()
+    from collections import Counter
+    
+    return all([ Counter(i_s) == Counter(i_o) 
+                   for i_s, i_o in zip(self.edges, other.edges)])
 
 
   def __str__(self):
@@ -172,19 +174,18 @@ class UDGraph(Graph):
       edge (start, end) is duplicated by an edge (end, start). Further work with
       the graph is assumed to treat this pair as a single edge.
     """
-    if edges:
-      edges_dup = [(end, start) for start, end in edges]
-      edges.extend(edges_dup)
-    
-    if graph and isinstance(graph, Graph) and graph.edges:
-      edges_graph_dup = [(end, start) for start, end in graph.edges]
-
-      if edges:
-        edges.extend(edges_graph_dup)
-      else:
-        edges = edges_graph_dup
-
     super().__init__(edges=edges, graph=graph, vertices_num=vertices_num)
+    
+    if edges:
+      for start, end in edges:
+        self.edges[end].append(start)
+    
+    if type(graph) == Graph:
+      for start, incidence in enumerate(graph.edges):
+        for end in incidence:
+          self.edges[end].append(start)
+
+    self.update_max_degree()
 
 
   def remove_edge(self, start, end):
@@ -203,9 +204,12 @@ class UDGraph(Graph):
 
 if __name__ == '__main__':
   udgraph = UDGraph(edges=[ (0, 1), (0, 3), (1, 2), (2, 0), (2, 3) ])
+  # print(udgraph)
   graph = Graph(edges=[ (0, 1), (0, 3), (1, 2), (2, 0), (2, 3) ])
-  print(graph)
-  print(udgraph)
+  udgraph2 = UDGraph(graph=udgraph, edges=[(4,1), (4,2)])
+  print(repr(graph))
+  print(repr(udgraph))
+  print(repr(udgraph2))
 
   graph_eval = UDGraph()
   graph_eval.edges = eval(repr(graph))

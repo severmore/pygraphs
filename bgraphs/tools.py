@@ -277,7 +277,7 @@ if __name__ == '__main__':
 
   matching, rest = covering_matching(graph)
   print('matching: ', matching)
-  print('rest: ', rest)
+  print('rest: ', repr(rest))
 
   rest.union(matching)
   graph = bgraphs.graph.UDGraph(edges=
