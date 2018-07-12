@@ -208,10 +208,8 @@ class SpanningBGraph:
 if __name__ == '__main__':
   import bgraphs.generating
 
-  list_to_str = lambda l: ''.join(map(lambda x: str(x), l))
-
   # cycle_len = 20
-  size = 4
+  size = 3
 
   # graph = generate_cycle(cycle_len)
   graph = bgraphs.generating.grid(size)
@@ -222,4 +220,4 @@ if __name__ == '__main__':
   result = spanning( tuple(0 for _ in range(size ** 2)), size ** 2)
 
   for i, item in enumerate(result):
-    print(f'{i:2} ({list_to_str(item[0])}) {item[1]:.4f}')
+    print(f'{i:2} ({ "".join(map(str, item[0])) }) {item[1]:.4f}')
