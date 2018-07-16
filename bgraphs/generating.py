@@ -226,7 +226,7 @@ class Geo:
         if old == 1 and self.scene[shift[0]][shift[1]] == 2:
           self._available.remove(shift)
         
-        if self.scene[shift[0]][shift[1]] == 1:
+        if old == 0 and self.scene[shift[0]][shift[1]] == 1:
           self._available.add(shift)
 
 
