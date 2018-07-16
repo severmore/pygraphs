@@ -251,8 +251,7 @@ class Geo:
       return 2
     elif distance <= self.r_allowed:
       return 1
-    else:
-      return 0 
+    return 0 
 
   
   def is_valid(self):
