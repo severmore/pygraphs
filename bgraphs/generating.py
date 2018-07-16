@@ -105,25 +105,19 @@ class Geo:
     self.cell = (area[0] / grid[0],
                  area[1] / grid[1])
 
-    print('cell', self.cell)
-    
     self.mask_center = (math.floor(r_allowed / self.cell[0]), 
                         math.floor(r_allowed / self.cell[1]))
-    
-    print('center', self.mask_center)
 
     self.mask_size = (2 * self.mask_center[0] + 1,
                       2 * self.mask_center[1] + 1)
-    
-    print('size', self.mask_size)
 
     self.mask = self.find_mask()
-
-    print('mask', self.mask)
-
     self.scene = [ [0 
         for _ in range(self.grid[0]) ] 
         for _ in range(self.grid[1]) ]
+    
+    self._places = list()
+    self._available = set()
   
 
   # TODO proceed case area < r_allowed
@@ -138,75 +132,69 @@ class Geo:
   
 
   def generate(self, vertices_num):
+    """ Generate in the loop a random position among available ones and apply 
+    the mask to each position. """
 
-    init_place = (random.randint(0, self.grid[0] -1), 
-                random.randint(0, self.grid[1] -1))
+    self._available = set()
     
-    places = [init_place]
+    init_place = (random.randint(0, self.grid[0] - 1), 
+                  random.randint(0, self.grid[1] - 1))
+    self._places = [init_place]
 
-    print('position', places[0])
-    
-    places_available = set()
-
-    self.process_place(init_place, places_available)
-    self.show(self.scene, 'scene')
+    self._apply_mask(init_place)
 
     for _ in range(1, vertices_num):
-      
-      i_place = random.randint(0, len(places_available) - 1)
-      pos = 0
-      for i, place in enumerate(places_available):
-        if i == i_place:
-          pos = place
-          break
-      
-      print(pos)
-      places.append(pos)
 
-      self.process_place(pos, places_available)
-      self.show(self.scene, 'scene')
-
-
-    for pos in places:
-      self.scene[pos[0]][pos[1]] = '*'
+      place = self.random_choice(self._available)
+      self._places.append(place)
+      self._apply_mask(place)
     
-    self.show(self.scene, 'scene')
-
-
-    print('Valid?', self.is_valid(places))
-
-    return places_available
+    return self._available
 
   
-  def process_place(self, place, places_available):
-
-    mask_shift = (place[0] - self.mask_center[0], 
-                  place[1] - self.mask_center[1])
-
-    print('shift', mask_shift)
+  def random_choice(self, seq):
+    """ Returns a random element from the sequence. """
+    i_choice = random.randint(0, len(seq) - 1)
     
+    for i, place in enumerate(seq):
+      if i == i_choice:
+        return place
+    
+    return None
+
+  
+  def _apply_mask(self, place):
+    """ Apply mask to the scene with proper positioning to the scene and update 
+    available places. """
+    # The rules by which scene values are changed when mask is applied.
     MASK = [[0, 1, 2],
             [1, 1, 2],
             [2, 2, 2]]
     
-    mask_start = (0 if mask_shift[0] > 0 else - mask_shift[0], 
-                  0 if mask_shift[1] > 0 else - mask_shift[1])
+    # The posisition of the left up angle of the mask on the scene.
+    mask_pos = (place[0] - self.mask_center[0], 
+                place[1] - self.mask_center[1])
+    
+    # Computes the bounds of iteration loops in which mask is applied if it 
+    # isn't placed intirely in the scene.
+    mask_start = (0 if mask_pos[0] > 0 else - mask_pos[0], 
+                  0 if mask_pos[1] > 0 else - mask_pos[1])
 
     mask_end = (
-        self.grid[0] - mask_shift[0]
-          if mask_shift[0] + mask_shift[0] > self.grid[0] 
+        self.grid[0] - mask_pos[0]
+          if mask_pos[0] + mask_pos[0] > self.grid[0] 
           else self.mask_size[0],
 
-        self.grid[1] - mask_shift[1]
-          if mask_shift[1] + self.mask_size[1] > self.grid[1] 
+        self.grid[1] - mask_pos[1]
+          if mask_pos[1] + self.mask_size[1] > self.grid[1] 
           else self. mask_size[1]
     )
 
     for x in range(mask_start[0], mask_end[0]):
       for y in range(mask_start[1], mask_end[1]):
 
-        shift = (x + mask_shift[0], 
-                 y + mask_shift[1])
+        shift = (x + mask_pos[0], 
+                 y + mask_pos[1])
 
         old = self.scene[shift[0]][shift[1]]
 
@@ -214,10 +202,10 @@ class Geo:
             MASK[ self.scene[shift[0]][shift[1]] ][ self.mask[x][y]]
         
         if old == 1 and self.scene[shift[0]][shift[1]] == 2:
-          places_available.remove(shift)
+          self._available.remove(shift)
         
         if self.scene[shift[0]][shift[1]] == 1:
-          places_available.add(shift)
+          self._available.add(shift)
 
 
   def distance(self, i, j):
@@ -228,57 +216,66 @@ class Geo:
   
   def find_mask(self):
     """ Returns computed mask. """
-    mask = [ [0 
-        for _ in range(self.mask_size[1]) ] 
-        for _ in range(self.mask_size[0]) ]
+    return [ [ self._classify_cell (i, j)
+        for j in range(self.mask_size[1]) ] 
+        for i in range(self.mask_size[0]) ]
 
-    for x in range(self.mask_size[0]):
-      for y in range(self.mask_size[1]):
 
-        distance = self.distance((x,y), self.mask_center)
-
-        if distance <= self.r_disable:
-          mask[x][y] = 2
-        
-        elif distance <= self.r_allowed:
-          mask[x][y] = 1
+  def _classify_cell(self, i, j):
+    """ Classify cell to set of disable (2), available (1) and neutral (0). """
+    distance = self.distance((i, j), self.mask_center)
     
-    return mask
+    if distance <= self.r_disable:
+      return 2
+    elif distance <= self.r_allowed:
+      return 1
+    else:
+      return 0 
 
   
-  def is_valid(self, places):
-
-    print('positions', places)
-    print('disable', self.r_disable)
-
+  def is_valid(self):
+    """ Returns true if places are valid, i.e. the distance between any two 
+    places is greater than disable radius. """
     return not any(
         self.distance(i, j) < self.r_disable
-        for i in places 
-        for j in places 
+        for i in self._places 
+        for j in self._places 
         if i != j)
 
 
-  def show(self, area, name):
+  def show(self, name):
+    """ Display area: mask or scene. """
 
-    coord_horizontal = "".join([ f'{i % 10:2}' for i in range(len(area)) ])
-    sep_horizontal = '+' + '-' * (len(area) * 2 + 1)
+    area = self.scene if name == 'scene' else \
+           self.mask  if name == 'mask'  else [[]]
+    
+    for pos in self._places:
+      area[pos[0]][pos[1]] = '*'
+    
+    x_coords = "".join([ f'{i % 10:2}' for i in range(len(area)) ])
+    separator = '+' + '-' * (len(area) * 2 + 1)
     indent = ' ' * len(name)
 
-    print(f'\n{name}:  {coord_horizontal}')
-    print(f'{indent} {sep_horizontal}')
+    print(f'\n{name}:  {x_coords}')
+    print(f'{indent} {separator}')
 
     for i, line in enumerate(area):
 
-      coord_vertical = f'{i % 10}|'
+      y_coords = f'{i % 10}|'
 
       line_str = ' '.join(map(str, line))
 
-      print(indent, coord_vertical, line_str)
+      print(indent, y_coords, line_str)
 
     print()
 
+    for pos in self._places:
+      area[pos[0]][pos[1]] = 2
+
 
 if __name__ == '__main__':
-  # geo(5, 100, 200, (800, 800), (25,25))
   gen = Geo(100, 200, (800, 800), (25,25))
   gen(5)
+
+  gen.show('scene')
+  print('Valid?', gen.is_valid())
