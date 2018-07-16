@@ -93,10 +93,20 @@ def grid(size):
   return bgraphs.graph.UDGraph(edges=horizontal + vertical)
 
 
+
 class Geo:
+  """ Generation a random undirected via placing vertices on the map (scene) """
 
   def __init__(self, r_disable, r_allowed, area, grid):
-    
+    """
+    Initialize a generator. To launch generator call the object.
+
+    Args:
+      r_disable (float) - a minimum radius between any two spots
+      r_allowed (float) - a maximum radius between any two spots
+      area (float, float) - 2D-region inside which spots are generated
+      grid (int, int) - the size of grid
+    """
     self.r_disable = r_disable ** 2
     self.r_allowed = r_allowed ** 2
     self.area = area
@@ -111,16 +121,16 @@ class Geo:
     self.mask_size = (2 * self.mask_center[0] + 1,
                       2 * self.mask_center[1] + 1)
 
-    self.mask = self.find_mask()
+    self.mask = self.get_mask()
     self.scene = [ [0 
         for _ in range(self.grid[0]) ] 
         for _ in range(self.grid[1]) ]
     
     self._places = list()
     self._available = set()
+    self._edges = list()
   
 
-  # TODO proceed case area < r_allowed
   def __call__(self, vertices_num):
     
     if self.r_allowed < self.r_disable or \
@@ -128,7 +138,21 @@ class Geo:
        self.area[1] ** 2 < self.r_disable:
       return None
 
-    return self.generate(vertices_num)
+    self.generate(vertices_num)
+    self.make_edges()
+
+    print(self._edges)
+
+    return bgraphs.graph.UDGraph(edges=self._edges, vertices_num=vertices_num)
+  
+
+  def make_edges(self):
+    """ Generate list of edges based on spots generated """
+    for one in range(len(self._places)):
+      for two in range(one + 1, len(self._places)):
+        distance = self.distance(self._places[one], self._places[two])
+        if distance < self.r_allowed:
+          self._edges.append((one, two))
   
 
   def generate(self, vertices_num):
@@ -149,8 +173,6 @@ class Geo:
       self._places.append(place)
       self._apply_mask(place)
     
-    return self._available
-
   
   def random_choice(self, seq):
     """ Returns a random element from the sequence. """
@@ -214,7 +236,7 @@ class Geo:
            ((i[1] - j[1]) * self.cell[1]) ** 2
 
   
-  def find_mask(self):
+  def get_mask(self):
     """ Returns computed mask. """
     return [ [ self._classify_cell (i, j)
         for j in range(self.mask_size[1]) ] 
@@ -235,7 +257,7 @@ class Geo:
   
   def is_valid(self):
     """ Returns true if places are valid, i.e. the distance between any two 
-    places is greater than disable radius. """
+    places is greater than disable radius. Useful for tests. """
     return not any(
         self.distance(i, j) < self.r_disable
         for i in self._places 
@@ -275,7 +297,9 @@ class Geo:
 
 if __name__ == '__main__':
   gen = Geo(100, 200, (800, 800), (25,25))
-  gen(5)
+  graph = gen(10)
 
   gen.show('scene')
   print('Valid?', gen.is_valid())
+  print('edges', gen._edges)
+  print(graph)
