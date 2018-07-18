@@ -78,13 +78,13 @@ class VisingColoring:
     return self.all_colors - colors_used
 
 
-  def get_neighbor(self, vertex, color):
+  def get_neighbor(self, vertex, exclude, color):
     """ 
     Get an neighboring vertex such that a correspongin edge has color specified. 
     """
 
     for end in self.graph.edges[vertex]:
-      if self.color[vertex, end] == color:
+      if self.color[vertex, end] == color and end != exclude:
         return end
     
     return None
@@ -100,7 +100,7 @@ class VisingColoring:
 
       if self.color[start, end] != self.NOCOLOR:
         continue
-
+      
       missing_colorset_start = self.get_missing_colors(start)
       missing_colorset_end   = self.get_missing_colors(end)
       missing_colorset_common = missing_colorset_start.intersection(
@@ -114,21 +114,37 @@ class VisingColoring:
       color = missing_colorset_start.pop()
       color_next = missing_colorset_end.pop()
       vertex = end
-      vertex_next = self.get_neighbor(vertex, color)
+      vertex_next = self.get_neighbor(end, start, color)
 
       self.set_color(start, end, color)
 
       # Building an alternating path.
-      while vertex_next:
+      while vertex_next is not None:
         
         self.set_color(vertex, vertex_next, color_next)
 
-        vertex = vertex_next
-        vertex_next = self.get_neighbor(vertex, color_next)
+        vertex_next, vertex = \
+            self.get_neighbor(vertex_next, vertex, color_next), vertex_next
         
         color, color_next = color_next, color
 
     return self.color
+
+
+def is_valid(coloring, graph, color_type='Vising'):
+  """ Check if edge coloring is valid. """
+
+  for start, incidents in enumerate(graph.edges):
+    
+    colorset = set()
+    
+    for end in incidents:
+      if coloring[start, end] in colorset:
+        return False
+      
+      colorset.add(coloring[start, end])
+
+  return True 
 
 
 
