@@ -131,7 +131,8 @@ class VisingColoring:
     return self.color
 
 
-def is_valid(coloring, graph, color_type='Vising'):
+
+def is_valid(coloring, graph):
   """ Check if edge coloring is valid. """
 
   for start, incidents in enumerate(graph.edges):
@@ -180,6 +181,14 @@ class ColeHopcroftColoring:
     return self.coloring
 
 
+  @staticmethod
+  def to_commmon_form(coloring):
+
+    return { (start, end[0]): color
+              for color, matching in enumerate(coloring)
+              for start, end in enumerate(matching.edges) if end }
+
+
 
 if __name__ == '__main__':
   import bgraphs.graph
@@ -190,4 +199,14 @@ if __name__ == '__main__':
 
   coloring = colorize(graph, algorithm='Cole-Hopcroft')
 
-  print(coloring)
+  print('coloring', coloring)
+
+  f_coloring = ColeHopcroftColoring.to_commmon_form(coloring)
+
+  print('formatted', f_coloring)
+
+  graph = bgraphs.graph.UDGraph(edges=
+      [ (0, 3), (0, 4), (1, 3), (1, 4), (1, 5), (2, 3)])
+
+  print('is valid?', is_valid(f_coloring, graph))
+
