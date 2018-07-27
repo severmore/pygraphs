@@ -167,7 +167,7 @@ def _covering_partition(graph):
     H2, H1 = H1, H2
     M2, M1 = M1, M2
 
-  # Iterates till in both subraphs the set of max degree vertices equals M
+  # Iterates till in both the subraphs the set of max degree vertices equals M
   while M2:
 
     H21, H22 = euler_split(H2)
@@ -234,21 +234,21 @@ def covering_matching(graph, sustain_graph=True):
 
     # The first iteration of cycle is individually coded to avoid superfluous
     # coping of graph edges to `rest`.
+
     if matching.max_degree > 1:
       matching, rest = _covering_partition(matching)
 
-      if matching.max_degree > matching.max_degree:
+      if matching.max_degree > rest.max_degree:
         matching, rest = rest, matching
 
     while matching.max_degree > 1:
       G1, G2 = _covering_partition(matching)
 
-      if G1.max_degree < G2.max_degree:
-        matching = G1
-        rest.union(G2)
-      else:
-        matching = G2
-        rest.union(G1)
+      if G1.max_degree > G2.max_degree:
+        G1, G2 = G2, G1
+
+      matching = G1
+      rest.union(G2)
       
     return matching, rest
   
@@ -256,13 +256,10 @@ def covering_matching(graph, sustain_graph=True):
 
     matching = graph
 
-    while matching.max_degree > 1:      
-      G1, G2 = _covering_partition(matching)
+    while matching.max_degree > 1: 
 
-      if G1.max_degree < G2.max_degree:
-        matching = G1
-      else:
-        matching = G2
+      G1, G2 = _covering_partition(matching)
+      matching = G1 if G1.max_degree < G2.max_degree else G2
     
     return matching
 

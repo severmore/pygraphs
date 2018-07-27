@@ -162,39 +162,26 @@ class RemoveAddUDGraphTestCase(unittest.TestCase):
 
 
 
-def validate_coloring(coloring, graph):
-  """ Check if edge coloring is valid. """
-
-  for start, incidents in enumerate(graph.edges):
-    colorset = { coloring[start, end] for end in incidents }
-    
-    if len(colorset) != len(graph.edges[start]):
-      return False
-  
-  return True 
-
-
-
 class VisingColoringTestCase(unittest.TestCase): 
 
   def test_vising_coloring_arbitrary_graph_simple(self):
     EDGES = [(0,2), (0,3), (1,2), (1,3), (2,0), (2,1), (3,0), (3,1)]
     graph = bgraphs.graph.Graph(edges=EDGES)
     coloring = bgraphs.coloring.colorize(graph)
-    self.assertTrue(validate_coloring(coloring, graph))
+    self.assertTrue(bgraphs.coloring.is_valid(coloring, graph))
 
   def test_vising_coloring_undirected_graph_simple(self):
     EDGES = [ (0,2), (0,3), (1,2), (1,3) ]
     graph = bgraphs.graph.UDGraph(edges=EDGES)
     coloring = bgraphs.coloring.colorize(graph)
-    self.assertTrue(validate_coloring(coloring, graph))
+    self.assertTrue(bgraphs.coloring.is_valid(coloring, graph))
   
   @unittest.skip('skip for a while')
   def test_vising_coloring_generated(self):
     graph = bgraphs.generating.bgraph(20, vratio_low=.4, vratio_high=.6, 
                                       edge_prob=0.3)
     coloring = bgraphs.coloring.colorize(graph)
-    self.assertTrue(validate_coloring(coloring, graph))
+    self.assertTrue(bgraphs.coloring.is_valid(coloring, graph))
 
 
 
@@ -204,7 +191,7 @@ class ColeHopcroftColoringTestCase(unittest.TestCase):
     EDGES = [(0,2), (0,3), (1,2), (1,3)]
     graph = bgraphs.graph.UDGraph(edges=EDGES)
     coloring = bgraphs.coloring.colorize(graph, algorithm='Cole-Hopcroft')
-    self.assertTrue(validate_coloring(coloring, graph))
+    self.assertTrue(bgraphs.coloring.is_valid(coloring, graph))
 
 
 

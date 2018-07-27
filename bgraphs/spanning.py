@@ -1,5 +1,7 @@
 from collections import deque, Iterable
 
+import bgraphs.graph
+
 class SpanningBGraph:
   """ A functor class that finds a spanning bipartite subgraph. """
 
@@ -21,7 +23,11 @@ class SpanningBGraph:
       coloring.
     """
     self.graph = graph
-    self.visited = dict() # a mapping storing pairs coloring - distance
+    self._visited = dict() # a mapping storing pairs coloring - distance
+    self._optimum = list()
+    self._min_metrics = SpanningBGraph.METRICS_MAX
+    self._min_coloring = None
+    self._bgraph = None
   
 
   def __call__(self, init_coloring, max_distance, metrics='regular'):
@@ -64,9 +70,11 @@ class SpanningBGraph:
                           len(init_coloring) == self.graph.vertices_num )
       
       if is_valid_coloring and max_distance >= 0:
-        return self.__find(init_coloring, max_distance)
+        
+        self.__find(init_coloring, max_distance)
+        return self.make_bgraph()
     
-    return None
+    return
 
   
   def __find(self, init_coloring, max_distance):
@@ -76,8 +84,8 @@ class SpanningBGraph:
     """
 
     init_metrics = self.__evaluate_metrics(init_coloring)
-    optimum_coloring = [ (init_coloring, init_metrics) ]
-    self.visited[init_coloring] = 0
+    self._optimum = [ (init_coloring, init_metrics) ]
+    self._visited[init_coloring] = 0
 
     distance = 0
     min_coloring = None
@@ -90,9 +98,9 @@ class SpanningBGraph:
       
       coloring = queue.popleft()
 
-      if self.visited[coloring] > distance:
+      if self._visited[coloring] > distance:
 
-        optimum_coloring.append((min_coloring, min_metrics))
+        self._optimum.append((min_coloring, min_metrics))
         
         min_coloring = None
         min_metrics  = SpanningBGraph.METRICS_NONE
@@ -105,18 +113,18 @@ class SpanningBGraph:
         
         child_coloring = self.__invert_vertex_color(vertex, coloring)
 
-        if child_coloring not in self.visited:
+        if child_coloring not in self._visited:
           
           queue.append(child_coloring)
           child_metrics = self.__evaluate_metrics(child_coloring)
-          self.visited[child_coloring] = self.visited[coloring] + 1
+          self._visited[child_coloring] = self._visited[coloring] + 1
 
           if child_metrics < min_metrics:
             min_metrics = child_metrics
             min_coloring = child_coloring
+    
+    return
       
-    return optimum_coloring
-
 
   def __invert_vertex_color(self, vertex, coloring):
     """ Returns coloring that differs by `vertex` from the given one. """
@@ -152,6 +160,155 @@ class SpanningBGraph:
       return degree_max - degree_sum / self.graph.vertices_num
 
     return SpanningBGraph.METRICS_MAX
+  
+
+  def make_bgraph(self, how='minimum', distance=0):
+    """ Return a spanning bipartite graph buiodl from the given vertices 
+    coloring and an initial graph via deleting unconsistent edges, i.e. edges
+    that connects vertices of the same color. The mehtod is assumed a spanning
+    bgraph be found; otherwise returns None.
+    
+    Args:
+      how (str) - takes to value - 'minimum' and 'distance'. If 'minimum' is 
+          chosen the method finds the coloring corresponding to the minimum
+          value of the metrics; if 'distance' is chosen it finds an optimum
+          value on the `distance` specified, i.e. the coloring differs exactly 
+          by `distance` colors.
+      
+      distance (int) - specifies how much colors the initial coloring differs 
+          from a local optimum values. It is used when how specified as 
+          'distance', otherwise ignored.
+    
+    Returns:
+      :obj:`UDGraph` - the bipartite graph built from the binary coloring and
+          a complete graph in which a subgraph is found, if any and `how` is
+          correctly specified
+      
+      None - if a spanning subgraph is not found yet or a parameter `how` 
+          specified erroneously.
+    """
+    if not self._optimum:
+      return None
+
+    self._min_metrics = SpanningBGraph.METRICS_MAX
+    self._min_coloring = None
+
+    if how == 'minimum':
+      
+      for col, metrics in self._optimum:
+        if metrics < self._min_metrics:
+          self._min_metrics = metrics
+          self._min_coloring = col
+    
+    elif how == 'distance':
+      
+      self._min_coloring = self._optimum[distance][0]
+      self._min_metrics  = self._optimum[distance][1]
+    
+    else:
+      return
+
+    self._bgraph = bgraphs.graph.UDGraph(
+      edges=[ (i, j) for i in self.graph.get_vertices() 
+                     for j in range(i + 1, self.graph.vertices_num)
+                     if self._min_coloring[i] != self._min_coloring[j] ]
+    )
+
+    return self._bgraph
+
+
+  @staticmethod
+  def to_str(coloring):
+    return "".join(map(str, coloring))
+  
+
+  def reindex(self):
+    """ 
+    Perform permutation of vertices indexes so that all the vertices of one
+    part of a bipartite graph comes first and, after them, the others. 
+    """
+    if self._min_coloring is None:
+      return None
+
+    permutations = [0 for _ in self._min_coloring]
+    counter = 0
+
+    for i, color in enumerate(self._min_coloring):
+      if color == 1:
+        permutations[i] = counter
+        counter += 1
+    
+    for i, color in enumerate(self._min_coloring):
+      if color == 0:
+        permutations[i] = counter
+        counter += 1
+
+    return bgraphs.graph.UDGraph(
+        edges=[ (permutations[i], permutations[j]) 
+            for i in self.graph.get_vertices() 
+            for j in range(i + 1, self.graph.vertices_num)
+            if self._min_coloring[i] != self._min_coloring[j] ]
+        )
+
+
+  @staticmethod
+  def is_bipartite(bgraphs, get_parts=False):
+
+    if not bgraphs or not bgraphs.edges:
+      return None
+    
+    one, two = {0}, set(bgraphs.edges[0])
+
+    completed = {0}
+
+  
+    def __fill_parts(active, passive, incidence):
+
+      new_list = list()
+
+      for i in incidence:
+        if i not in completed:
+          completed.add(i)
+          new_list.extend(bgraphs.edges[i])
+          active |= set(bgraphs.edges[i])
+      
+      if len(completed) == bgraphs.vertices_num:
+        return
+
+      __fill_parts(passive, active, new_list)
+    
+
+    __fill_parts(one, two, bgraphs.edges[0])
+
+    # TODO: Check if conencted
+
+    return one.isdisjoint(two)
+
+
+   
+if __name__ == '__main__':
+  import bgraphs.generating
+
+  size = 3
+  graph = bgraphs.generating.grid(size)
+  spanning = SpanningBGraph(graph)
+
+  spanning( tuple(0 for _ in range(size ** 2)), size ** 2)
+
+  for i, item in enumerate(spanning._optimum):
+    print(f'{i:2} ({SpanningBGraph.to_str(item[0]) }) {item[1]:.4f}')
+
+  print(f'({spanning.to_str(spanning._min_coloring)}) {spanning._min_metrics}')
+  print(spanning._bgraph)
+
+  bgraph_con = spanning.reindex()
+
+  print(bgraph_con)
+
+  print('is bipartite?', spanning.is_bipartite(spanning._bgraph))
+  print('is bipartite 2?', spanning.is_bipartite(bgraph_con))
+  print('graph is bipartite?', spanning.is_bipartite(spanning.graph))
+
 
 
 #  class __Node:
@@ -204,20 +361,3 @@ class SpanningBGraph:
 #               degree_max, 
 #               degree_sum, 
 #               parent.distance + 1)
-
-if __name__ == '__main__':
-  import bgraphs.generating
-
-  # cycle_len = 20
-  size = 3
-
-  # graph = generate_cycle(cycle_len)
-  graph = bgraphs.generating.grid(size)
-
-  spanning = SpanningBGraph(graph)
-
-  # result = spanning( tuple(1 for _ in range(cycle_len)),  cycle_len  )
-  result = spanning( tuple(0 for _ in range(size ** 2)), size ** 2)
-
-  for i, item in enumerate(result):
-    print(f'{i:2} ({ "".join(map(str, item[0])) }) {item[1]:.4f}')
