@@ -5,7 +5,7 @@ generators.
 https://github.com/severmore/pygraphs
 """
 
-import bgraphs.graph
+import bipartite.graph
 import random
 import math
 
@@ -45,7 +45,7 @@ def bgraph(vertices_num, vratio_low=0.2, vratio_high=0.8, edge_prob=0.5):
           edges.append((start, end))
           edges.append((end, start))
     
-    return bgraphs.graph.Graph(edges=edges)
+    return bipartite.graph.Graph(edges=edges)
 
 
 def cycle(vertices_num):
@@ -62,7 +62,7 @@ def cycle(vertices_num):
   edges = [ (v, v + 1) for v in range(vertices_num - 1) ]
   edges.append( [(vertices_num - 1), 0] )
 
-  return bgraphs.graph.UDGraph(edges=edges)
+  return bipartite.graph.UDGraph(edges=edges)
 
 
 def grid(size):
@@ -90,7 +90,7 @@ def grid(size):
   horizontal = [ (i, i + 1)    for i in range(v_num) if  (i + 1) % size != 0]
   vertical   = [ (i, i + size) for i in range(v_num) if  i + size < v_num   ]
 
-  return bgraphs.graph.UDGraph(edges=horizontal + vertical)
+  return bipartite.graph.UDGraph(edges=horizontal + vertical)
 
 
 
@@ -143,7 +143,7 @@ class Geo:
 
     print(self._edges)
 
-    return bgraphs.graph.UDGraph(edges=self._edges, vertices_num=vertices_num)
+    return bipartite.graph.UDGraph(edges=self._edges, vertices_num=vertices_num)
   
 
   def make_edges(self):

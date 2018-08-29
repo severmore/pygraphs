@@ -149,7 +149,7 @@ def is_valid(coloring, graph):
 
 
 
-import bgraphs.tools
+import bipartite.matching
 
 class ColeHopcroftColoring:
 
@@ -168,13 +168,13 @@ class ColeHopcroftColoring:
         self.coloring.append(graph)
       
       else:
-        matching, rest = bgraphs.tools.covering_matching(graph)
+        matching, rest = bipartite.matching.covering_matching(graph)
         self.coloring.append(matching)
         self.colorize(rest)
     
     else:
 
-      one, two = bgraphs.tools.euler_split(graph)
+      one, two = bipartite.matching.euler_split(graph)
       self.colorize(one)
       self.colorize(two)
 
@@ -191,8 +191,8 @@ class ColeHopcroftColoring:
 
 
 if __name__ == '__main__':
-  import bgraphs.graph
-  graph = bgraphs.graph.UDGraph(edges=
+  import bipartite.graph
+  graph = bipartite.graph.UDGraph(edges=
       [ (0, 3), (0, 4), (1, 3), (1, 4), (1, 5), (2, 3)])
 
   print(graph)
@@ -205,7 +205,7 @@ if __name__ == '__main__':
 
   print('formatted', f_coloring)
 
-  graph = bgraphs.graph.UDGraph(edges=
+  graph = bipartite.graph.UDGraph(edges=
       [ (0, 3), (0, 4), (1, 3), (1, 4), (1, 5), (2, 3)])
 
   print('is valid?', is_valid(f_coloring, graph))

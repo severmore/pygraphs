@@ -1,6 +1,6 @@
 from collections import deque, Iterable
 
-import bgraphs.graph
+import bipartite.graph
 
 class SpanningBGraph:
   """ A functor class that finds a spanning bipartite subgraph. """
@@ -208,7 +208,7 @@ class SpanningBGraph:
     else:
       return
 
-    self._bgraph = bgraphs.graph.UDGraph(
+    self._bgraph = bipartite.graph.UDGraph(
       edges=[ (i, j) for i in self.graph.get_vertices() 
                      for j in range(i + 1, self.graph.vertices_num)
                      if self._min_coloring[i] != self._min_coloring[j] ]
@@ -243,7 +243,7 @@ class SpanningBGraph:
         permutations[i] = counter
         counter += 1
 
-    return bgraphs.graph.UDGraph(
+    return bipartite.graph.UDGraph(
         edges=[ (permutations[i], permutations[j]) 
             for i in self.graph.get_vertices() 
             for j in range(i + 1, self.graph.vertices_num)
@@ -287,10 +287,10 @@ class SpanningBGraph:
 
    
 if __name__ == '__main__':
-  import bgraphs.generating
+  import bipartite.generating
 
   size = 3
-  graph = bgraphs.generating.grid(size)
+  graph = bipartite.generating.grid(size)
   spanning = SpanningBGraph(graph)
 
   spanning( tuple(0 for _ in range(size ** 2)), size ** 2)

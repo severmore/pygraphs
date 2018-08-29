@@ -266,9 +266,9 @@ def covering_matching(graph, sustain_graph=True):
 
 if __name__ == '__main__':
 
-  import bgraphs.graph
+  import bipartite.graph
 
-  graph = bgraphs.graph.UDGraph(edges=
+  graph = bipartite.graph.UDGraph(edges=
       [ (0, 3), (0, 4), (1, 3), (1, 4), (1, 5), (2, 3)])
   print('graph: ', graph)
 
@@ -277,7 +277,7 @@ if __name__ == '__main__':
   print('rest: ', repr(rest))
 
   rest.union(matching)
-  graph = bgraphs.graph.UDGraph(edges=
+  graph = bipartite.graph.UDGraph(edges=
       [ (0, 3), (0, 4), (1, 3), (1, 4), (1, 5), (2, 3)])
 
   print('restored: ', rest)
