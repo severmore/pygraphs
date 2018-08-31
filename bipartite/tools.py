@@ -33,7 +33,7 @@ def dfs(graph, func, start=0):
 def dfs2(graph, func, start=0):
   """
   Traverse a `graph` using depth-first search and starting with `start`, and 
-  apply function `func` to each vertices. Recursive call.
+  apply function `func` to each vertices. Recursive variant of the algorithm.
   """
   visited = [False for _ in graph.get_vertices()]
 
@@ -50,7 +50,52 @@ def dfs2(graph, func, start=0):
 
 def has_cycle(graph):
   """
-  Ask whether a graph given has cycle or not.
+  `obj`:`graph` -> bool. Ask whether a graph given has cycle or not, using 
+  colors.
+  """
+  def _has_cycle(vertex):
+    # recolor vertex
+    whites.remove(vertex)
+    grays.add(vertex)
+
+    # visit neighbors
+    for neighbor in graph.edges[vertex]:
+
+      # end is already visited, a cycle is found
+      if neighbor in grays:
+        return True
+
+      # ignore blacks
+      if neighbor in blacks:
+        continue
+      
+      # traverse a neighbor recursively
+      if _has_cycle(neighbor):
+        return True
+    
+    grays.remove(vertex)
+    blacks.add(vertex)
+      
+  # white - not processed
+  # gray  - currently being processed
+  # black - comleted
+  
+  whites = set(graph.get_vertices())
+  grays  = set()
+  blacks = set()
+
+  # Traverse only whites
+  for vertex in graph.get_vertices():
+    if vertex in whites and _has_cycle(vertex):
+      return True
+  
+  return False
+
+
+def has_cycle2(graph):
+  """
+  `obj`:`graph` -> bool. Ask whether a graph given has cycle or not, recursive 
+  implementation.
   """
   visited = [False for _ in graph.get_vertices()]
 
@@ -74,6 +119,36 @@ def has_cycle(graph):
   return False
 
 
+def has_cycle3(graph):
+  """
+  `obj`:`graph` -> bool. Ask whether a graph given has cycle or not, disjoint
+  sets implementation.
+  """
+  parent = list(graph.get_vertices())
+
+  def find(vertex):
+    if parent[vertex] != vertex:
+      return find(parent[vertex])
+    return vertex
+  
+  def union(one, two):
+    parent_one = find(one)
+    parent_two = find(two)
+
+    parent[parent_two] = parent_one
+  
+  for start, end in graph.get_edges():
+    set_start = find(start)
+    set_end = find(end)
+
+    if set_start == set_end:
+      return True
+    
+    union(set_start, set_end)
+  
+  return False
+
+
 if __name__ == '__main__':
   import bipartite.graph
 
@@ -83,7 +158,6 @@ if __name__ == '__main__':
   dfs(get_graph(), print, start=1)
 
   get_cycle = lambda: bipartite.graph.Graph(edges=[
-        (0,1), (1,2), (2,3), (3,4), (4,5), (5,2)])
+        (0,1), (1,2), (2,3), (3,4), (4,5)])
 
-  print(has_cycle(get_cycle()))
-
+  print(has_cycle3(get_cycle()))
