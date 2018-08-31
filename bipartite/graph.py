@@ -99,7 +99,7 @@ class Graph:
 
 
   def get_vertices(self):
-    """ () -> range: Returns vertices of the graph as a range object. """
+    """ () -> range of int: returns vertices of the graph. """
     return range(self.vertices_num)
 
 
@@ -123,6 +123,13 @@ class Graph:
     """ Add an edge to a graph. It is assumed no new vertex is added and
     `max_degree` is not updated. """
     self.edges[start].append(end)
+  
+
+  def get_edges(self):
+    """ () -> range of tuple: returns all edges in the graph. """
+    for start, incidence in enumerate(self.edges):
+      for end in incidence:
+        yield start, end
 
 
   def union(self, graph):
@@ -198,6 +205,15 @@ class UDGraph(Graph):
     `max_degree` is not updated. """
     self.edges[start].append(end)
     self.edges[end].append(start)
+  
+  def get_edges(self):
+    """ () -> range of tuple: returns all edges in the graph. """
+    yielded = set()
+    for start, incidence in enumerate(self.edges):
+      for end in incidence:
+        if (end, start) not in yielded:
+          yielded.add((start, end))
+          yield start, end
 
 
 if __name__ == '__main__':
@@ -208,3 +224,7 @@ if __name__ == '__main__':
   print(repr(graph))
   print(repr(udgraph))
   print(repr(udgraph2))
+
+  ugraph = UDGraph(edges=[(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 2)])
+  print(list(ugraph.get_edges()))
+  print(list(ugraph.get_edges()))
