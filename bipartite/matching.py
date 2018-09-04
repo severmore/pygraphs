@@ -23,7 +23,8 @@ def euler_partition(graph, sustain_graph=False):
   Args:
     graph(:obj:`Graph`) - a graph for which a partition is to find.
 
-    sustain_graph(bool) - if it is set to True graph edges will be copied.
+    sustain_graph(bool) - if it is set to True graph edges will be copied (not 
+        supported yet).
   
   Return:
     :obj:`list` of :obj:`list` of int: an Euler partition representation that 
@@ -36,7 +37,7 @@ def euler_partition(graph, sustain_graph=False):
     Sciences, Vol. 5, No. 4, 1976.
   """
   if sustain_graph:
-    pass
+    raise NotImplementedError
 
   partition = list()
 
@@ -116,6 +117,7 @@ def euler_split(graph):
   G2.update_max_degree()
 
   return G1, G2
+
 
 
 def _covering_partition(graph):
@@ -264,7 +266,110 @@ def covering_matching(graph, sustain_graph=True):
     return matching
 
 
+
+# TODO: add get edges
+def weight_redistibution(graph, sustain_graph=False):
+  """
+  Perform weight redistibution for edges of a regular bipartite graph so that 
+  each edge is initially granted zero weight, and at the end for each vertex in 
+  the graph only one incident edge has non-zero weigh, being equal to a maximum 
+  degree value.
+
+  Args:
+    graph(`obj`:`graph`) - a given graph
+
+    sustain_graph(bool) - if it is set to True graph edges will be copied (not 
+        supported yet).
+  """
+  weight = {start : {end : 1 
+              for end in incident} 
+              for start, incident in graph.edges}
+  
+  if sustain_graph:
+    raise NotImplementedError
+
+
+  
+def reweight(graph):
+
+  def _reweight(start, end, where):
+    # print(start, end, where, graph)
+    graph.remove_edge(start, end)
+    graph_weighted[where].add_edge(start, end)
+  
+  def next_vertex(head, path):
+    if len(path) == 1 or graph.edges[head][0] != path[-2]:
+      return graph.edges[head][0]
+    return graph.edges[head][1]
+  
+  graph_weighted = [graph.__class__(vertices_num=graph.vertices_num) 
+                    for _ in range(3)]
+
+  for vertex in graph.get_vertices():
+
+    # if degree of vertex is nonzero it has at least one neighbor
+    print(f'starting to construct path with vertex: {vertex} of degree {graph.degree(vertex)}, {graph}')
+    if graph.degree(vertex):
+
+      path = [vertex]
+      head = vertex
+
+      print(f'initiating path {path} with head {head}.')
+
+      while path:
+
+        v_next = next_vertex(head, path)
+
+        print(f'\tcurrent path is {path} with a head {head}. '
+              f'Next vertex is {v_next} of degree {graph.degree(v_next)}.')
+
+        if graph.degree(v_next) == 1:
+
+          print(f'\t next vertex {v_next} is a leaf, roll back to vertex {path[-1]}')
+
+          # v_next is a leaf and cannot be a part of a cycle to find: 
+          #   asign weight of 1 to it.
+          _reweight(vertex, v_next, 1)
+          
+        elif v_next in path:
+          # v_next is already in path, a cycle is found
+          head = v_next
+          switcher = 1
+          start = v_next
+
+          print(f'\ta cycle is found, initiating removal, current path is {path + [head]}')
+
+          while path[-1] != v_next:
+            end = path.pop()
+            print(f'\t\t path {path}, edge {start, end}')
+            _reweight(start, end, switcher + 1)
+            start = end
+            switcher *= -1
+          
+          print(f'\t\t path {path}, edge {start, v_next}')
+          _reweight(start, v_next, switcher + 1)
+
+        else:
+          # v_next is not in path, add it to the path and change head
+          head = v_next
+          path.append(v_next)
+        
+        if graph.degree(head) < 2:
+          print(f'\ta head became of degree {graph.degree(head)}, path {path}')
+          path.pop()
+          if path:
+            _reweight(head, path[-1], 1)
+            head = path[-1]
+  
+  return graph_weighted
+
+
+  
+
+
+
 if __name__ == '__main__':
+
 
   import bipartite.graph
 
@@ -272,14 +377,19 @@ if __name__ == '__main__':
       [ (0, 3), (0, 4), (1, 3), (1, 4), (1, 5), (2, 3)])
   print('graph: ', graph)
 
-  matching, rest = covering_matching(graph)
-  print('matching: ', matching)
-  print('rest: ', repr(rest))
+  # euler_partition(graph, sustain_graph=True)
 
-  rest.union(matching)
+  # matching, rest = covering_matching(graph)
+  # print('matching: ', matching)
+  # print('rest: ', repr(rest))
+
+  # rest.union(matching)
   graph = bipartite.graph.UDGraph(edges=
       [ (0, 3), (0, 4), (1, 3), (1, 4), (1, 5), (2, 3)])
+  
+  for i, graph in enumerate(reweight(graph)):
+    print(f'[{i}] {graph}')
 
-  print('restored: ', rest)
-  print('equality of rest and graph: ', rest == graph)
+  # print('restored: ', rest)
+  # print('equality of rest and graph: ', rest == graph)
   
