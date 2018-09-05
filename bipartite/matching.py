@@ -293,11 +293,12 @@ def weight_redistibution(graph, sustain_graph=False):
 def reweight(graph):
 
   def _reweight(start, end, where):
-    # print(start, end, where, graph)
+    # print('|||', start, end, where, graph)
     graph.remove_edge(start, end)
     graph_weighted[where].add_edge(start, end)
   
-  def next_vertex(head, path):
+  def next_vertex(path):
+    head = path[-1]
     if len(path) == 1 or graph.edges[head][0] != path[-2]:
       return graph.edges[head][0]
     return graph.edges[head][1]
@@ -307,60 +308,58 @@ def reweight(graph):
 
   for vertex in graph.get_vertices():
 
-    # if degree of vertex is nonzero it has at least one neighbor
-    print(f'starting to construct path with vertex: {vertex} of degree {graph.degree(vertex)}, {graph}')
+    # print(f'starting to construct path with vertex: {vertex} of degree {graph.degree(vertex)}, {graph}')
+    
     if graph.degree(vertex):
 
       path = [vertex]
-      head = vertex
 
-      print(f'initiating path {path} with head {head}.')
+      # print(f'initiating path {path}.')
 
       while path:
 
-        v_next = next_vertex(head, path)
+        # print(graph, path)
 
-        print(f'\tcurrent path is {path} with a head {head}. '
-              f'Next vertex is {v_next} of degree {graph.degree(v_next)}.')
+        v_next = next_vertex(path)
+        
+        # print(f'\tcurrent path is {path}. '
+        #       f'Next vertex is {v_next} of degree {graph.degree(v_next)}.')
 
         if graph.degree(v_next) == 1:
-
-          print(f'\t next vertex {v_next} is a leaf, roll back to vertex {path[-1]}')
-
-          # v_next is a leaf and cannot be a part of a cycle to find: 
-          #   asign weight of 1 to it.
-          _reweight(vertex, v_next, 1)
+          
+          # print(f'\t next vertex {v_next} is a leaf, roll back to vertex {path[-1]}')
+          
+          _reweight(v_next, path[-1], 1)
           
         elif v_next in path:
-          # v_next is already in path, a cycle is found
-          head = v_next
-          switcher = 1
-          start = v_next
 
-          print(f'\ta cycle is found, initiating removal, current path is {path + [head]}')
+          start = v_next
+          switcher = 1
+
+          # print(f'\ta cycle is found, initiating removal, current path is {path + [v_next]}')
 
           while path[-1] != v_next:
             end = path.pop()
-            print(f'\t\t path {path}, edge {start, end}')
+            
+            # print(f'\t\t path {path}, edge {start, end}, weight {switcher + 1}')
+            
             _reweight(start, end, switcher + 1)
             start = end
             switcher *= -1
           
-          print(f'\t\t path {path}, edge {start, v_next}')
+          # print(f'\t\t path {path}, edge {start, v_next}, weight {switcher + 1}')
+          
           _reweight(start, v_next, switcher + 1)
 
         else:
-          # v_next is not in path, add it to the path and change head
-          head = v_next
           path.append(v_next)
-        
-        if graph.degree(head) < 2:
-          print(f'\ta head became of degree {graph.degree(head)}, path {path}')
-          path.pop()
+
+        while path and graph.degree(path[-1]) < 2:
+          # print(f'\ta head became of degree {graph.degree(path[-1])}, path {path}')
+          head = path.pop()
           if path:
             _reweight(head, path[-1], 1)
-            head = path[-1]
-  
+        
   return graph_weighted
 
 
@@ -372,10 +371,12 @@ if __name__ == '__main__':
 
 
   import bipartite.graph
+  import bipartite.generating
+  import bipartite.tools
 
-  graph = bipartite.graph.UDGraph(edges=
-      [ (0, 3), (0, 4), (1, 3), (1, 4), (1, 5), (2, 3)])
-  print('graph: ', graph)
+  # graph = bipartite.graph.UDGraph(edges=
+  #     [ (0, 3), (0, 4), (1, 3), (1, 4), (1, 5), (2, 3)])
+  # print('graph: ', graph)
 
   # euler_partition(graph, sustain_graph=True)
 
@@ -384,12 +385,34 @@ if __name__ == '__main__':
   # print('rest: ', repr(rest))
 
   # rest.union(matching)
-  graph = bipartite.graph.UDGraph(edges=
-      [ (0, 3), (0, 4), (1, 3), (1, 4), (1, 5), (2, 3)])
+  # graph = bipartite.graph.UDGraph(edges=
+  #     [ (0, 3), (0, 4), (1, 3), (1, 4), (1, 5), (2, 3)])
   
-  for i, graph in enumerate(reweight(graph)):
-    print(f'[{i}] {graph}')
+  # for i, graph in enumerate(reweight(graph)):
+  #   print(f'[{i}] {graph}')
 
   # print('restored: ', rest)
   # print('equality of rest and graph: ', rest == graph)
+
+  # graph = bipartite.generating.grid(3)
+  graph = bipartite.generating.bgraph(10000)
+  graph = bipartite.graph.UDGraph(graph=graph)
+  graph_ref = bipartite.graph.UDGraph(graph=graph)
+  three_graphs = reweight(graph)
+  for i, g in enumerate(three_graphs):
+    print(f'[{i}] {g}')
+
+  print('is acyclic ', bipartite.tools.has_cycle(three_graphs[1]))
+  print('is empty ', list(graph.get_edges()))
+  
+  graph.union(three_graphs[0]).union(three_graphs[1]).union(three_graphs[2])
+  print(graph == graph_ref)
+  
+
+
+
+  
+
+  
+   
   
