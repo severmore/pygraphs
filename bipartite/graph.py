@@ -137,6 +137,9 @@ class Graph:
     unchanged. """
     for start, incidence in enumerate(graph.edges):
       self.edges[start].extend(incidence)
+    return self
+
+
 
 
 
@@ -214,6 +217,8 @@ class UDGraph(Graph):
         if (end, start) not in yielded:
           yielded.add((start, end))
           yield start, end
+
+
 
 
 if __name__ == '__main__':
