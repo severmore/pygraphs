@@ -9,7 +9,8 @@ import bipartite.graph
 import random
 import math
 
-def bgraph(vertices_num, vratio_low=0.2, vratio_high=0.8, edge_prob=0.5):
+def bgraph(vertices_num, vratio_low=0.4, vratio_high=0.6, edge_prob=0.5,
+           kind='graph'):
     """
     Generates a random bipartite graph. 
     
@@ -25,9 +26,18 @@ def bgraph(vertices_num, vratio_low=0.2, vratio_high=0.8, edge_prob=0.5):
 
       edge_prob (float) - a floating number from an interval [0,1] - an edge 
           probability.
+      
+      kind (str) - type of generated graph. It can be 'graph' or 'ugraph' for 
+          directed and undirected graph correspondenly.
 
     Return:
-      :obj:'Graph' - a generated graph.
+      :obj:'Graph' - a generated graph if kind equal to 'graph'.
+
+      :obj:'UDGraph' - a generated graph if kind equal to 'ugraph'.
+    
+    Raises:
+      'ValueError' - if kind is incorrect, that is, it doesn't equals to 
+          'graph' or 'ugraph'.
     
     """
 
@@ -37,15 +47,28 @@ def bgraph(vertices_num, vratio_low=0.2, vratio_high=0.8, edge_prob=0.5):
     edges = list()
     part_one = round(random.uniform(vratio_low, vratio_high) * vertices_num)
 
-    for start in range(part_one):
-      for end in range(part_one, vertices_num):
-        
-        if random.random() < edge_prob and (start, end) not in edges:
+    if kind == 'graph':
+      for start in range(part_one):
+        for end in range(part_one, vertices_num):
           
-          edges.append((start, end))
-          edges.append((end, start))
+          if random.random() < edge_prob:
+            edges.append((start, end))
+
+      return bipartite.graph.Graph(edges=edges)
+
+    elif kind == 'ugraph':
+      for start in range(part_one):
+        for end in range(part_one, vertices_num):
+          
+          if random.random() < edge_prob:
+            edges.append((start, end))
+            edges.append((end, start))
+
+      return bipartite.graph.UDGraph(edges=edges)
     
-    return bipartite.graph.Graph(edges=edges)
+    else:
+      raise ValueError("kind should equals 'graph' or 'ugraph', "
+                      f"but {kind} was given")
 
 
 def cycle(vertices_num):
