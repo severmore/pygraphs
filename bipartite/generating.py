@@ -60,9 +60,8 @@ def bgraph(vertices_num, vratio_low=0.4, vratio_high=0.6, edge_prob=0.5,
       for start in range(part_one):
         for end in range(part_one, vertices_num):
           
-          if random.random() < edge_prob:
+          if random.random() < edge_prob and (end, start) not in edges:
             edges.append((start, end))
-            edges.append((end, start))
 
       return bipartite.graph.UDGraph(edges=edges)
     
