@@ -290,12 +290,11 @@ def weight_redistibution(graph, sustain_graph=False):
 
 
   
-def reweight(graph):
+def reweight(graph, partitions):
 
   def _reweight(start, end, where):
-    # print('|||', start, end, where, graph)
     graph.remove_edge(start, end)
-    graph_weighted[where].add_edge(start, end)
+    partitions[where].add_edge(start, end)
   
   def next_vertex(path):
     head = path[-1]
@@ -303,64 +302,42 @@ def reweight(graph):
       return graph.edges[head][0]
     return graph.edges[head][1]
   
-  graph_weighted = [graph.__class__(vertices_num=graph.vertices_num) 
-                    for _ in range(3)]
 
   for vertex in graph.get_vertices():
-
-    # print(f'starting to construct path with vertex: {vertex} of degree {graph.degree(vertex)}, {graph}')
-    
     if graph.degree(vertex):
 
       path = [vertex]
 
-      # print(f'initiating path {path}.')
-
       while path:
+        head = path[-1]
 
-        # print(graph, path)
+        if graph.degree(head) == 0:
+          path.pop()
+          continue
+        
+        if graph.degree(head) == 1 and len(path) > 1:
+          path.pop()
+          _reweight(head, path[-1], 1)
+          continue
 
         v_next = next_vertex(path)
-        
-        # print(f'\tcurrent path is {path}. '
-        #       f'Next vertex is {v_next} of degree {graph.degree(v_next)}.')
-
-        if graph.degree(v_next) == 1:
           
-          # print(f'\t next vertex {v_next} is a leaf, roll back to vertex {path[-1]}')
-          
-          _reweight(v_next, path[-1], 1)
-          
-        elif v_next in path:
-
+        if v_next in path:
           start = v_next
           switcher = 1
 
-          # print(f'\ta cycle is found, initiating removal, current path is {path + [v_next]}')
-
           while path[-1] != v_next:
             end = path.pop()
-            
-            # print(f'\t\t path {path}, edge {start, end}, weight {switcher + 1}')
-            
             _reweight(start, end, switcher + 1)
             start = end
             switcher *= -1
-          
-          # print(f'\t\t path {path}, edge {start, v_next}, weight {switcher + 1}')
           
           _reweight(start, v_next, switcher + 1)
 
         else:
           path.append(v_next)
-
-        while path and graph.degree(path[-1]) < 2:
-          # print(f'\ta head became of degree {graph.degree(path[-1])}, path {path}')
-          head = path.pop()
-          if path:
-            _reweight(head, path[-1], 1)
         
-  return graph_weighted
+  return partitions
 
 
   
@@ -368,7 +345,6 @@ def reweight(graph):
 
 
 if __name__ == '__main__':
-
 
   import bipartite.graph
   import bipartite.generating
@@ -395,12 +371,19 @@ if __name__ == '__main__':
   # print('equality of rest and graph: ', rest == graph)
 
   # graph = bipartite.generating.grid(3)
-  graph = bipartite.generating.bgraph(10000)
-  graph = bipartite.graph.UDGraph(graph=graph)
+
+  graph = bipartite.generating.bgraph(10, kind='ugraph')
+
+  print(graph)
+
+  # graph = bipartite.graph.UDGraph(graph=graph)
   graph_ref = bipartite.graph.UDGraph(graph=graph)
-  three_graphs = reweight(graph)
-  for i, g in enumerate(three_graphs):
-    print(f'[{i}] {g}')
+
+  partitions = [bipartite.graph.UDGraph(vertices_num=graph.vertices_num) 
+                    for _ in range(3)]
+  three_graphs = reweight(graph, partitions)
+  # for i, g in enumerate(three_graphs):
+  #   print(f'[{i}] {g}')
 
   print('is acyclic ', bipartite.tools.has_cycle(three_graphs[1]))
   print('is empty ', list(graph.get_edges()))
