@@ -102,6 +102,12 @@ class Graph:
     """ () -> range of int: returns vertices of the graph. """
     return range(self.vertices_num)
 
+  
+  def add_vertices(self, num):
+    """ Add `num` vertices into graph. """
+    for _ in range(num):
+      self.edges.append([])
+
 
   def update_max_degree(self):
     """ Count a maximum degree among vertices in the graph, if any, otherwise 

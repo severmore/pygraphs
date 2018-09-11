@@ -4,6 +4,7 @@ Created by Ivanov Roman and Maxim Dudin.
 https://github.com/severmore/pygraphs
 """
 from collections import deque
+import bipartite.graph
 
 def euler_partition(graph, sustain_graph=False):
   """ 
@@ -267,7 +268,6 @@ def covering_matching(graph, sustain_graph=True):
 
 
 
-# TODO: add get edges
 def weight_redistibution(graph, sustain_graph=False):
   """
   Perform weight redistibution for edges of a regular bipartite graph so that 
@@ -280,13 +280,126 @@ def weight_redistibution(graph, sustain_graph=False):
 
     sustain_graph(bool) - if it is set to True graph edges will be copied (not 
         supported yet).
-  """
-  weight = {start : {end : 1 
-              for end in incident} 
-              for start, incident in graph.edges}
   
+  References:
+    [1] Alexander Schijver. Bipartite Edge Coloring In O(DE) Time // SIAM
+    Journal on Computing, 1998. - Vol.28, - No. 3, - pp. 841-846.
+  """
   if sustain_graph:
     raise NotImplementedError
+  
+  weights = {s:{d:1 for d in ds} for s, ds in enumerate(graph.edges)}
+
+  print(graph)
+  print(weights)
+
+  reweight_cycle(graph, weights)
+
+  print(weights)
+
+
+def find_parts(graph):
+    """
+    obj:`Graph` -> obj:`set`, obj:`set` - finds parts of a bipartite graph given
+    """
+    visited = [False for _ in graph.get_vertices()]
+    one, two = {0}, set()
+
+    while not all(visited):
+      connected = False
+
+      for vertex in one:
+        if not visited[vertex]:
+          connected = True
+          visited[vertex] = True
+          two |= set(graph.edges[vertex])
+      
+      if connected:
+        one, two = two, one
+      else:
+        one.add(visited.index(False))
+    
+    return one, two
+
+def to_regular(graph):
+  """
+  obj:`Graph` -> obj:`Graph` - complete a bipartite graph given to regular one
+  """
+  one, two = find_parts(graph)
+
+  diff = len(one) - len(two)
+  if diff < 0:
+    diff *= -1
+    two, one = one, two
+  
+  v_num = graph.vertices_num
+  graph.add_vertices(diff)
+  two |= set(range(v_num, v_num + diff))
+  
+  max_degree = graph.max_degree
+
+  for start in one:
+    while graph.degree(start) < max_degree:
+      for end in two:
+        if graph.degree(end) < max_degree:
+          graph.add_edge(start, end)
+          break
+  
+  return graph
+
+
+
+def reweight_cycle(graph, weights):
+
+  for vertex in graph.get_vertices():
+    if graph.degree(vertex):
+
+      print(f'building path [{vertex}]')
+
+      path = [vertex]
+
+      while path:
+
+        head = path[-1]
+        if graph.degree(graph.edges[head][0]) == 1:
+          print(f'  leaving while with vertex [{vertex}]')
+          break
+
+        step = graph.edges[head][ 0 
+            if len(path) == 1 or graph.edges[head][0] != path[-2] 
+            else 1]
+        
+        print(f'  next step is {step}, [{path}]')
+
+        if step in path:
+
+          cycle = path[path.index(step):] + [step]
+          path = path[:path.index(step) + 1]
+
+          print(f'  a cycle {cycle} found, tail {path}')
+          
+          traverse = lambda parity: range(parity, len(cycle)-1, 2)
+
+          sum_evens = sum(weights[ cycle[i] ][ cycle[i+1]] for i in traverse(0))
+          sum_odds  = sum(weights[ cycle[i] ][ cycle[i+1]] for i in traverse(1))
+
+          print(f'  sums odd: {sum_odds} and even: {sum_evens}')
+
+          for i in traverse(sum_odds > sum_evens):
+            weights[ cycle[i] ][ cycle[i+1] ] += 1
+
+          for i in traverse(sum_odds > sum_evens):
+            weights[ cycle[i] ][ cycle[i+1] ] -= 1
+
+            if weights[ cycle[i] ][ cycle[i+1] ] == 0:
+              graph.remove_edge( cycle[i], cycle[i+1] )
+          
+          print('  weights now', weights)
+        else:
+          path.append(step)
+
+  return graph.get_edges()
+
 
 
   
@@ -340,56 +453,31 @@ def reweight(graph, partitions):
   return partitions
 
 
-  
-
-
-
 if __name__ == '__main__':
 
   import bipartite.graph
   import bipartite.generating
   import bipartite.tools
 
-  # graph = bipartite.graph.UDGraph(edges=
-  #     [ (0, 3), (0, 4), (1, 3), (1, 4), (1, 5), (2, 3)])
-  # print('graph: ', graph)
-
-  # euler_partition(graph, sustain_graph=True)
-
-  # matching, rest = covering_matching(graph)
-  # print('matching: ', matching)
-  # print('rest: ', repr(rest))
-
-  # rest.union(matching)
-  # graph = bipartite.graph.UDGraph(edges=
-  #     [ (0, 3), (0, 4), (1, 3), (1, 4), (1, 5), (2, 3)])
-  
-  # for i, graph in enumerate(reweight(graph)):
-  #   print(f'[{i}] {graph}')
-
-  # print('restored: ', rest)
-  # print('equality of rest and graph: ', rest == graph)
-
-  # graph = bipartite.generating.grid(3)
-
   graph = bipartite.generating.bgraph(10, kind='ugraph')
-
-  print(graph)
-
-  # graph = bipartite.graph.UDGraph(graph=graph)
   graph_ref = bipartite.graph.UDGraph(graph=graph)
 
-  partitions = [bipartite.graph.UDGraph(vertices_num=graph.vertices_num) 
-                    for _ in range(3)]
-  three_graphs = reweight(graph, partitions)
+  # partitions = [bipartite.graph.UDGraph(vertices_num=graph.vertices_num) 
+  #                   for _ in range(3)]
+  # three_graphs = reweight(graph, partitions)
   # for i, g in enumerate(three_graphs):
   #   print(f'[{i}] {g}')
 
-  print('is acyclic ', bipartite.tools.has_cycle(three_graphs[1]))
-  print('is empty ', list(graph.get_edges()))
+
+  # print('is acyclic ', bipartite.tools.has_cycle(three_graphs[1]))
+  # print('is empty ', list(graph.get_edges()))
   
-  graph.union(three_graphs[0]).union(three_graphs[1]).union(three_graphs[2])
-  print(graph == graph_ref)
+  # graph.union(three_graphs[0]).union(three_graphs[1]).union(three_graphs[2])
+  # print(graph == graph_ref)
+  # weight_redistibution(graph)
+
+  print(graph)
+  print(to_regular(graph))
   
 
 
