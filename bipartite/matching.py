@@ -5,6 +5,7 @@ https://github.com/severmore/pygraphs
 """
 from collections import deque
 import bipartite.graph
+import bipartite.tools
 
 def euler_partition(graph, sustain_graph=False):
   """ 
@@ -268,35 +269,6 @@ def covering_matching(graph, sustain_graph=True):
 
 
 
-def weight_redistibution(graph, sustain_graph=False):
-  """
-  Perform weight redistibution for edges of a regular bipartite graph so that 
-  each edge is initially granted zero weight, and at the end for each vertex in 
-  the graph only one incident edge has non-zero weigh, being equal to a maximum 
-  degree value.
-
-  Args:
-    graph(`obj`:`graph`) - a given graph
-
-    sustain_graph(bool) - if it is set to True graph edges will be copied (not 
-        supported yet).
-  
-  References:
-    [1] Alexander Schijver. Bipartite Edge Coloring In O(DE) Time // SIAM
-    Journal on Computing, 1998. - Vol.28, - No. 3, - pp. 841-846.
-  """
-  if sustain_graph:
-    raise NotImplementedError
-  
-  weights = {s:{d:1 for d in ds} for s, ds in enumerate(graph.edges)}
-
-  print(graph)
-  print(weights)
-
-  reweight_cycle(graph, weights)
-
-  print(weights)
-
 
 def find_parts(graph):
     """
@@ -323,8 +295,10 @@ def find_parts(graph):
 
 def to_regular(graph):
   """
-  obj:`Graph` -> obj:`Graph` - complete a bipartite graph given to regular one
+  obj:`Graph` -> obj:`list` of obj:'turple' - complete a bipartite graph given 
+      to regular one and returns a list of edges added
   """
+  added_edges = list()
   one, two = find_parts(graph)
 
   diff = len(one) - len(two)
@@ -343,61 +317,109 @@ def to_regular(graph):
       for end in two:
         if graph.degree(end) < max_degree:
           graph.add_edge(start, end)
+          added_edges.append((start, end))
           break
+
+  return added_edges
+
+
+def weight_redistibution(graph, sustain_graph=False):
+  """
+  Perform weight redistibution for edges of a regular bipartite graph so that 
+  each edge is initially granted zero weight, and at the end for each vertex in 
+  the graph only one incident edge has non-zero weigh, being equal to a maximum 
+  degree value.
+
+  Args:
+    graph(`obj`:`graph`) - a given graph
+
+    sustain_graph(bool) - if it is set to True graph edges will be copied (not 
+        supported yet).
   
-  return graph
+  References:
+    [1] Alexander Schijver. Bipartite Edge Coloring In O(DE) Time // SIAM
+    Journal on Computing, 1998. - Vol.28, - No. 3, - pp. 841-846.
+  """
+  if sustain_graph:
+    raise NotImplementedError
 
+  weights = [bipartite.tools.multidict(ends, default=1) for ends in graph.edges]
 
-
-def reweight_cycle(graph, weights):
+  print(f'python visualization.py "{weights}" ')
 
   for vertex in graph.get_vertices():
     if graph.degree(vertex):
-
-      print(f'building path [{vertex}]')
-
       path = [vertex]
+      evolve_path(path, graph, weights)
 
-      while path:
 
-        head = path[-1]
-        if graph.degree(graph.edges[head][0]) == 1:
-          print(f'  leaving while with vertex [{vertex}]')
+  print(f'python visualization.py "{weights}" ')
+
+
+def evolve_path(path, graph, weights):
+
+  while path:
+    head = path[-1]
+    if graph.degree(graph.edges[head][0]) == 1:
+      break
+
+    if len(path) == 1:
+      step = graph.edges[head][0]
+
+    else:
+      step = -1
+      for end in graph.edges[head]:
+        if end != path[-2]:
+          step = end
           break
+      
+      if step == -1:
 
-        step = graph.edges[head][ 0 
-            if len(path) == 1 or graph.edges[head][0] != path[-2] 
-            else 1]
-        
-        print(f'  next step is {step}, [{path}]')
+        multiplicity = len(weights[head][path[-2]])
+        if multiplicity > 1:
+          for i in range(1, multiplicity):
+            delta = weights[head][path[-2]][i]
+            weights[head][path[-2]][0] += delta
+            weights[path[-2]][head][0] += delta
 
-        if step in path:
+          weights[head][path[-2]] = [ weights[path[-2]][head][0] ]
+          weights[path[-2]][head] = [ weights[path[-2]][head][0] ]
 
-          cycle = path[path.index(step):] + [step]
-          path = path[:path.index(step) + 1]
+        graph.remove_edge(head, graph.edges[head][0])
+        continue
+    
+    print(f'  next step is {step}, {path}')
 
-          print(f'  a cycle {cycle} found, tail {path}')
-          
-          traverse = lambda parity: range(parity, len(cycle)-1, 2)
+    if step not in path:
+      path.append(step)
+      continue
 
-          sum_evens = sum(weights[ cycle[i] ][ cycle[i+1]] for i in traverse(0))
-          sum_odds  = sum(weights[ cycle[i] ][ cycle[i+1]] for i in traverse(1))
+    cycle = path[path.index(step):] + [step]
+    path = path[:path.index(step) + 1]
 
-          print(f'  sums odd: {sum_odds} and even: {sum_evens}')
+    traverse = lambda parity: range(parity, len(cycle)-1, 2)
+    w = lambda i: weights[cycle[i]][cycle[i+1]][-1]
 
-          for i in traverse(sum_odds > sum_evens):
-            weights[ cycle[i] ][ cycle[i+1] ] += 1
+    sum_evens = sum(w(i) for i in traverse(0))
+    sum_odds  = sum(w(i) for i in traverse(1))
+    
+    print(f'  a cycle {cycle} found, tail {path}; sums odd: {sum_odds} and even: {sum_evens}')
 
-          for i in traverse(sum_odds > sum_evens):
-            weights[ cycle[i] ][ cycle[i+1] ] -= 1
+    for i in traverse(sum_odds >= sum_evens):
+      weights[cycle[i]][cycle[i+1]][-1] += 1
+      weights[cycle[i+1]][cycle[i]][-1] += 1
 
-            if weights[ cycle[i] ][ cycle[i+1] ] == 0:
-              graph.remove_edge( cycle[i], cycle[i+1] )
-          
-          print('  weights now', weights)
-        else:
-          path.append(step)
+    for i in traverse(sum_odds < sum_evens):
+      weights[cycle[i]][cycle[i+1]][-1] -= 1
+      weights[cycle[i+1]][cycle[i]][-1] -= 1
 
+      if w(i) == 0:
+        graph.remove_edge(cycle[i], cycle[i+1])
+        weights[cycle[i]][cycle[i+1]].pop()
+        weights[cycle[i+1]][cycle[i]].pop()
+    
+    print(f'python visualization.py "{weights}" ')
+      
   return graph.get_edges()
 
 
@@ -462,22 +484,13 @@ if __name__ == '__main__':
   graph = bipartite.generating.bgraph(10, kind='ugraph')
   graph_ref = bipartite.graph.UDGraph(graph=graph)
 
-  # partitions = [bipartite.graph.UDGraph(vertices_num=graph.vertices_num) 
-  #                   for _ in range(3)]
-  # three_graphs = reweight(graph, partitions)
-  # for i, g in enumerate(three_graphs):
-  #   print(f'[{i}] {g}')
-
-
-  # print('is acyclic ', bipartite.tools.has_cycle(three_graphs[1]))
-  # print('is empty ', list(graph.get_edges()))
-  
-  # graph.union(three_graphs[0]).union(three_graphs[1]).union(three_graphs[2])
-  # print(graph == graph_ref)
-  # weight_redistibution(graph)
-
   print(graph)
   print(to_regular(graph))
+  print(graph)
+
+  weight_redistibution(graph)
+
+
   
 
 
