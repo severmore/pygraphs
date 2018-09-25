@@ -6,6 +6,45 @@ https://github.com/severmore/pygraphs
 from collections import deque
 
 
+def multidict(iterable, values=None, default=None):
+  """
+  Create dictionary in which repеtition are allowed and stored in a list as a
+  value of the dict object.
+
+  Args:
+    iterable(iterable) - a list of keys
+    
+    values(iterable, optional) - a list of values which length should equal the
+        `iterable` one
+
+    default(obj, optional) - a default value if `values` not specified;
+        otherwise ignored
+  
+  Ruturn:
+    obj:`dict` of obj:`list` - a dictanary with keys from `iterable` and
+        values from `values` wrappped into a list. If `iterable` has repeated
+        elements a value list will contain more then one element.
+  Raise:
+    ValueError - if len(values) != len(iterable)
+  """
+  if values and len(values) != len(iterable):
+    raise ValueError('values length should equal to iterable length')
+  
+  value = lambda i: values[i] if values else default
+
+  multidict = dict()
+
+  for i in iterable:
+    if i in multidict:
+      multidict[i].append(value(i))
+
+    else:
+      multidict[i] = [value(i)]
+
+  return multidict
+
+
+
 def dfs(graph, func, start=0):
   """
   Traverse a `graph` using depth-first search and starting with `start`, and 
