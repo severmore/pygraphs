@@ -7,3 +7,7 @@
 # python 
 *__pycache__
 sample.egg-info
+
+# graphviz
+*.pdf
+*.gv
