@@ -4,6 +4,24 @@ structure describing graphs in this package.
 
 https://github.com/severmore/pygraphs
 """
+class Edge:
+  """
+  This used for inititalization of edge of graph
+  this class contains fields:
+  from_vertex
+  to_vertex
+  weight
+  """
+  def __init__(self, from_vertex, to_vertex, weight=0):
+    # TODO throw some custom exception
+
+    if from_vertex is None or to_vertex is None:
+      raise Exception
+    self.from_vertex = from_vertex
+    self.to_vertex = to_vertex
+    self.weight = weight
+
+
 class Graph:
   """
   A graph representation used in the algorithms of this package. It is intended
@@ -61,8 +79,8 @@ class Graph:
     self.edges = [[] for _ in self.get_vertices()]
 
     if edges:
-      for start, end in edges:
-        self.edges[start].append(end)
+      for start, end, weight in edges:
+        self.edges[start].append(Edge(start, end, weight))
 
     if graph:
       for start, ends in enumerate(graph.edges):
@@ -89,7 +107,15 @@ class Graph:
 
 
   def __repr__(self):
-    return str(self.edges)
+    result = []
+    for edges in self.edges:
+      for edge in edges:
+        result.append({
+          'from_vertex': edge.from_vertex,
+          'to_vertex': edge.to_vertex,
+          'weight': edge.weight
+        })
+    return str(result)
 
 
   def degree(self, vertex):
@@ -201,10 +227,10 @@ class UDGraph(Graph):
 
 
 if __name__ == '__main__':
-  udgraph = UDGraph(edges=[ (0, 1), (0, 3), (1, 2), (2, 0), (2, 3) ])
+  #udgraph = UDGraph(edges=[ (0, 1), (0, 3), (1, 2), (2, 0), (2, 3) ])
   # print(udgraph)
-  graph = Graph(edges=[ (0, 1), (0, 3), (1, 2), (2, 0), (2, 3) ])
-  udgraph2 = UDGraph(graph=udgraph, edges=[(4,1), (4,2)])
+  graph = Graph(edges=[ (0, 1, 1), (0, 3, 1), (1, 2, 2), (2, 0, 3), (2, 3, 4) ])
+  #udgraph2 = UDGraph(graph=udgraph, edges=[(4,1), (4,2)])
   print(repr(graph))
-  print(repr(udgraph))
-  print(repr(udgraph2))
+  #print(repr(udgraph))
+  #print(repr(udgraph2))
