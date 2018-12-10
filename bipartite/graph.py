@@ -225,7 +225,8 @@ class WeightGraph(Graph):
   """
 
   def __init__(self, edges=None):
-    self.vertices_num = max(max(edges, key=lambda x: max(x[0], x[1]))) + 1
+    self.vertices_num = max(max(edges, key=lambda x:
+        max(x[0], x[1]))) + 1
     self.edges = [[] for _ in self.get_vertices()]
     for start, end, weight in edges:
       self.edges[start].append(Edge(start, end, weight))
