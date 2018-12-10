@@ -105,16 +105,19 @@ class Geo:
       r_disable (float) - a minimum radius between any two spots
       r_allowed (float) - a maximum radius between any two spots
       area (float, float) - 2D-region inside which spots are generated
-      grid (int, int) - the size of grid
+      grid (int, int) - the size of grid. Is used to map float area to int grid.
+        That's simplify work with generation
     """
+    # why is square here here
     self.r_disable = r_disable ** 2
+    # why is square here here
     self.r_allowed = r_allowed ** 2
     self.area = area
     self.grid = grid
-
+    # cell size
     self.cell = (area[0] / grid[0],
                  area[1] / grid[1])
-
+    # center of placed one into area
     self.mask_center = (math.floor(r_allowed / self.cell[0]), 
                         math.floor(r_allowed / self.cell[1]))
 
@@ -144,7 +147,9 @@ class Geo:
     print(self._edges)
 
     return bipartite.graph.UDGraph(edges=self._edges, vertices_num=vertices_num)
-  
+
+  def get_places(self):
+    return self._places
 
   def make_edges(self):
     """ Generate list of edges based on spots generated """
@@ -253,7 +258,7 @@ class Geo:
       return 1
     return 0 
 
-  
+
   def is_valid(self):
     """ Returns true if places are valid, i.e. the distance between any two 
     places is greater than disable radius. Useful for tests. """

@@ -79,8 +79,8 @@ class Graph:
     self.edges = [[] for _ in self.get_vertices()]
 
     if edges:
-      for start, end, weight in edges:
-        self.edges[start].append(Edge(start, end, weight))
+      for start, end in edges:
+        self.edges[start].append(end)
 
     if graph:
       for start, ends in enumerate(graph.edges):
@@ -105,17 +105,8 @@ class Graph:
     )
     return f'{klass_name}({edges_str})'
 
-
   def __repr__(self):
-    result = []
-    for edges in self.edges:
-      for edge in edges:
-        result.append({
-          'from_vertex': edge.from_vertex,
-          'to_vertex': edge.to_vertex,
-          'weight': edge.weight
-        })
-    return str(result)
+    return str(self.edges)
 
 
   def degree(self, vertex):
@@ -226,10 +217,37 @@ class UDGraph(Graph):
     self.edges[end].append(start)
 
 
+class WeightGraph(Graph):
+  """
+  A class for Graph with weights of edges.
+  Possible to refactore code and move this functionality to base class
+  This contains only one constructor by edges
+  """
+
+  def __init__(self, edges=None):
+    self.vertices_num = max(max(edges, key=lambda x: max(x[0], x[1]))) + 1
+    self.edges = [[] for _ in self.get_vertices()]
+    for start, end, weight in edges:
+      self.edges[start].append(Edge(start, end, weight))
+    self.max_degree = 0
+    self.update_max_degree()
+
+  def __repr__(self):
+    result = []
+    for edges in self.edges:
+      for edge in edges:
+        result.append({
+          'from_vertex': edge.from_vertex,
+          'to_vertex': edge.to_vertex,
+          'weight': edge.weight
+        })
+    return str(result)
+
+
 if __name__ == '__main__':
   #udgraph = UDGraph(edges=[ (0, 1), (0, 3), (1, 2), (2, 0), (2, 3) ])
   # print(udgraph)
-  graph = Graph(edges=[ (0, 1, 1), (0, 3, 1), (1, 2, 2), (2, 0, 3), (2, 3, 4) ])
+  graph = WeightGraph(edges=[ (0, 1, 1), (0, 3, 1), (1, 2, 2), (2, 0, 3), (2, 3, 4) ])
   #udgraph2 = UDGraph(graph=udgraph, edges=[(4,1), (4,2)])
   print(repr(graph))
   #print(repr(udgraph))
