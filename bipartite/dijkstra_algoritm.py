@@ -111,6 +111,9 @@ class DijkstraAlgorithm():
             result.append(self.initial_weight_structure[edge.to_vertex])
         return result
 
+    """
+        This method is used only for debug
+    """
     def get_result(self):
         keys = list(self.result.keys())
         result = []
@@ -121,6 +124,30 @@ class DijkstraAlgorithm():
                 "weight": self.result[key].weight
             })
         return result
+
+    """
+        Return object: 
+        {
+            path: list() with indexes,
+            weight: int weight of finded path
+        }
+    """
+    def get_path(self):
+        initial_vertexs = self.initial_weight_structure
+        current_index = self.end_index
+
+        vertexs = list()
+
+        while current_index is not None:
+            vertexs.insert(0, current_index)
+            current_index = initial_vertexs[current_index].parent
+
+        return {
+            "path": vertexs,
+            "weight": initial_vertexs[self.end_index].weight
+        }
+
+
 
 class PathTreeNode:
     """
@@ -157,3 +184,4 @@ if __name__ == '__main__':
     alg = DijkstraAlgorithm(graph, 0, 3)
     alg()
     print(alg.get_result())
+    print(alg.get_path())
