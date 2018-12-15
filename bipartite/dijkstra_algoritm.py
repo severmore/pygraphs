@@ -1,112 +1,159 @@
 import math
+import sys
 
 from bipartite.graph import WeightGraph
+from bipartite.binary_heap import BinaryHeap
 
 """
     This function realize Dijkstra algorithm
-    for search the shortest way via weight function
+    for search the shortest way via weight function.
+    For implementation of queue with priority the binary tree is used
+    We need to ave else one structure in parallel with bae structure
 """
 
-def dijkstra_algorithm(graph, start_index, end_index):
-    graph_edges = graph.edges
-    initial_weight_structure = get_initial_weight_structure(len(graph_edges), start_index)
-    determined_weight_structure = dict()
-
-    while len(initial_weight_structure) > 0:
-        min_vertex = find_min_in_weight_structure(initial_weight_structure)
-        min_vertex_neighboards = get_vertex_neighbords(graph_edges[min_vertex.index])
-        for neighbord_vertex in min_vertex_neighboards:
-            relaxation(min_vertex, initial_weight_structure.get(neighbord_vertex), get_edge_weight(graph_edges, min_vertex, initial_weight_structure.get(neighbord_vertex)))
-        determined_weight_structure[min_vertex.index] = min_vertex
-
-    keys = list(determined_weight_structure.keys())
-
-    for key in keys:
-        print(key, determined_weight_structure[key].parent, determined_weight_structure[key].index)
-
-
-def get_edge_weight(edges, from_vertex, to_vertex):
-    from_index = from_vertex.index
-    for edge in edges[from_index]:
-        if edge.to_vertex == to_vertex.index:
-            return edge.weight
-
-
-def get_vertex_neighbords(node_edges):
-    result = []
-    for edge in node_edges:
-        result.append(edge.to_vertex)
-    return result
-
 """
-    return structure with initial weight is equal to 
-    None instead of infinity
+    Constant for initialization 
+    of max weight of edge
 """
 
-def get_initial_weight_structure(count, start_vertex):
-    initial_structure = dict()
-    for i in range(0, count - 1):
-        if i == start_vertex:
-            initial_structure[i] = PathTreeNode(weigth=0, index=i)
-        else:
-            initial_structure[i] = PathTreeNode(index=i)
-    return initial_structure
+MAX_WEIGHT = sys.maxsize
 
-"""
-    method find minimum weight in node structure
-    and delete after that
-"""
 
-def find_min_in_weight_structure(structure):
-    keys = list(structure.keys())
-    result = None
-    result_key = None
+class DijkstraAlgorithm():
 
-    if not len(keys):
-        return result
-    else:
-        result = structure.get(keys[0])
-    for key in keys:
-        result = compare_weights(result, structure.get(key))
-        if result == structure.get(key):
-            result_key = key
-    return structure.pop(result_key)
+    def __init__(self, graph, start_index, end_index):
+        """
+            Algorithm is build by:
+            @:param graph is instance of WeightGraph class
+            @:param start_index (int) is index of vertex from algorithm starts
+            @:param end_vertex (int) is index of vertex where algorithm finish
+        """
+        self.initial_weight_structure = dict()
+        self.initial_helper_structure = BinaryHeap()
+        self.graph = graph
+        self.start_index = start_index
+        self.end_index = end_index
+        """
+            Store graph edges
+        """
+        self.edges = graph.edges
+        """
+            This field contains determined vertex by which path is build
+        """
+        self.path_structure = dict()
 
-"""
-    :return vertex with min weight
-"""
-def compare_weights(first, second):
-    if second.weight is None:
-        return first
-    if first.weight is None:
-        return second
-    if first.weight > second.weight:
-        return second
-    else:
-        return first
+        self.result = None
 
-def relaxation(from_vertex, to_vertex, edge_weight):
-    if from_vertex.weight is not None:
-        if to_vertex.weight is None:
-            to_vertex.weight = from_vertex.weight + edge_weight
-            to_vertex.parent = from_vertex.index
-        else:
-            if to_vertex.weight > from_vertex.weight + edge_weight:
-                to_vertex.weight = from_vertex.weight + edge_weight
+    def __call__(self, *args, **kwargs):
+        self.build_base_structure()
+        self.dijkstra_algorithm()
+
+    def build_base_structure(self):
+        """
+            Method initialize base key-value structure
+            and in parallel initialize
+            :return:
+        """
+
+        count = len(self.graph.edges)
+        start_index = self.start_index
+
+        """
+            Initialization of weight structure and
+            helper binary heap
+        """
+        for i in range(0, count - 1):
+            if i == start_index:
+                new_element = PathTreeNode(weigth=0, index=i)
+            else:
+                new_element = PathTreeNode(index=i)
+            self.initial_weight_structure[i] = new_element
+            self.initial_helper_structure.add_element(new_element)
+
+    """
+        Implementation of dijkstra algorithm
+    """
+    def dijkstra_algorithm(self):
+        vertex_heap = self.initial_helper_structure
+        determined_structure = dict()
+
+        while vertex_heap.get_heap_size() > 0:
+            current_vertex = vertex_heap.get_root()
+            neighbor_vertexs = self.get_vertex_neighbors(current_vertex.index)
+            for neighbord_vertex in neighbor_vertexs:
+                self.relaxation(current_vertex, neighbord_vertex)
+            determined_structure[current_vertex.index] = current_vertex
+        self.result = determined_structure
+
+    def relaxation(self, from_vertex, to_vertex):
+        if from_vertex is not None and from_vertex.weight != MAX_WEIGHT and to_vertex is not None:
+            edge_weight = self.get_edge_weight(from_vertex.index, to_vertex.index)
+            if to_vertex.weight > edge_weight + from_vertex.weight:
+                to_vertex.weight = edge_weight + from_vertex.weight
                 to_vertex.parent = from_vertex.index
-        return
+
+    def get_edge_weight(self, from_vertex, to_vertex):
+        result = MAX_WEIGHT
+        edges = self.edges[from_vertex]
+        for edge in edges:
+            if edge.to_vertex == to_vertex:
+                result = edge.weight
+        return result
+
+    """
+        Return list with PathTreeNode instances
+        that are neighbors 
+    """
+    def get_vertex_neighbors(self, vertex_index):
+        result = []
+        node_edges = self.edges[vertex_index]
+        for edge in node_edges:
+            result.append(self.initial_weight_structure[edge.to_vertex])
+        return result
+
+    def get_result(self):
+        keys = list(self.result.keys())
+        result = []
+        for key in keys:
+            result.append({
+                "index": key,
+                "parent": self.result[key].parent,
+                "weight": self.result[key].weight
+            })
+        return result
 
 class PathTreeNode:
-    def __init__(self, index=0, parent=None, weigth=None):
-        """
+    """
         :param parent: - int number from vertex
         :param weigth: - expected weight
-        """
+    """
+    def __init__(self, index=0, parent=None, weigth=MAX_WEIGHT):
         self.index = index
         self.parent = parent
         self.weight = weigth
 
+    """
+        Node tree less than other if it weight MORE than other
+        Reverted due to placement in binary heap
+    """
+    def __lt__(self, other):
+        if other is None:
+            return False
+        else:
+            return self.weight > other.weight
+
+    """
+        Node tree more than other if it weight LESS than other
+        Reverted due to placement in binary heap
+    """
+    def __gt__(self, other):
+        if other is None:
+            return False
+        else:
+            return self.weight < other.weight
 
 if __name__ == '__main__':
     graph = WeightGraph(edges=[(0, 1, 1), (0, 2, 1), (1, 2, 2), (2, 3, 4)])
-    dijkstra_algorithm(graph, 0, 3)
+    alg = DijkstraAlgorithm(graph, 0, 3)
+    alg()
+    print(alg.get_result())
