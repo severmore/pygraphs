@@ -23,10 +23,10 @@ class DijkstraAlgorithm():
 
     def __init__(self, graph, start_index, end_index):
         """
-            Algorithm is build by:
-            @:param graph is instance of WeightGraph class
-            @:param start_index (int) is index of vertex from algorithm starts
-            @:param end_vertex (int) is index of vertex where algorithm finish
+        Algorithm is build by:
+        @:param graph is instance of WeightGraph class
+        @:param start_index (int) is index of vertex from algorithm starts
+        @:param end_vertex (int) is index of vertex where algorithm finish
         """
         self.initial_weight_structure = dict()
         self.initial_helper_structure = BinaryHeap()
@@ -34,11 +34,11 @@ class DijkstraAlgorithm():
         self.start_index = start_index
         self.end_index = end_index
         """
-            Store graph edges
+        Store graph edges
         """
         self.edges = graph.edges
         """
-            This field contains determined vertex by which path is build
+        This field contains determined vertex by which path is build
         """
         self.path_structure = dict()
 
@@ -50,17 +50,16 @@ class DijkstraAlgorithm():
 
     def build_base_structure(self):
         """
-            Method initialize base key-value structure
-            and in parallel initialize
-            :return:
+        Method initialize base key-value structure
+        and in parallel initialize
+        :return:
         """
-
         count = len(self.graph.edges)
         start_index = self.start_index
 
         """
-            Initialization of weight structure and
-            helper binary heap
+        Initialization of weight structure and
+        helper binary heap
         """
         for i in range(0, count - 1):
             if i == start_index:
@@ -70,10 +69,10 @@ class DijkstraAlgorithm():
             self.initial_weight_structure[i] = new_element
             self.initial_helper_structure.add_element(new_element)
 
-    """
-        Implementation of dijkstra algorithm
-    """
     def dijkstra_algorithm(self):
+        """
+        Implementation of dijkstra algorithm
+        """
         vertex_heap = self.initial_helper_structure
         determined_structure = dict()
 
@@ -100,21 +99,21 @@ class DijkstraAlgorithm():
                 result = edge.weight
         return result
 
-    """
-        Return list with PathTreeNode instances
-        that are neighbors 
-    """
     def get_vertex_neighbors(self, vertex_index):
+        """
+        Return list with PathTreeNode instances
+        that are neighbors
+        """
         result = []
         node_edges = self.edges[vertex_index]
         for edge in node_edges:
             result.append(self.initial_weight_structure[edge.to_vertex])
         return result
 
-    """
-        This method is used only for debug
-    """
     def get_result(self):
+        """
+        This method is used only for debug
+        """
         keys = list(self.result.keys())
         result = []
         for key in keys:
@@ -151,29 +150,29 @@ class DijkstraAlgorithm():
 
 class PathTreeNode:
     """
-        :param parent: - int number from vertex
-        :param weigth: - expected weight
+    :param parent: - int number from vertex
+    :param weigth: - expected weight
     """
     def __init__(self, index=0, parent=None, weigth=MAX_WEIGHT):
         self.index = index
         self.parent = parent
         self.weight = weigth
 
-    """
+    def __lt__(self, other):
+        """
         Node tree less than other if it weight MORE than other
         Reverted due to placement in binary heap
-    """
-    def __lt__(self, other):
+        """
         if other is None:
             return False
         else:
             return self.weight > other.weight
 
-    """
+    def __gt__(self, other):
+        """
         Node tree more than other if it weight LESS than other
         Reverted due to placement in binary heap
-    """
-    def __gt__(self, other):
+        """
         if other is None:
             return False
         else:
