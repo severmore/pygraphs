@@ -12,6 +12,7 @@ class Point:
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y
 
+
 class Station:
     def __init__(self, position=Point((0, 0), 0), radius=0):
         self.position = position
@@ -251,7 +252,6 @@ def covering_visualisation(area, stations):
     ax.set_xlim(0, area[0])
     ax.set_ylim(0, area[1])
 
-
     def get_circle(point, radius):
         return plt.Circle((point.x, point.y), radius)
 
@@ -259,6 +259,7 @@ def covering_visualisation(area, stations):
         ax.add_artist(get_circle(station.get_position(), station.radius))
 
     fig.savefig('../visualisation/covering_example.png')
+
 
 if __name__ == '__main__':
     covering = AverageCover((20, 20), Point((0, 0), 0), (15, 1, 3))
