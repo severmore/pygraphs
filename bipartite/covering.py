@@ -258,15 +258,15 @@ def covering_visualisation(area, stations):
     for station in stations:
         ax.add_artist(get_circle(station.get_position(), station.radius))
 
-    fig.savefig('../visualisation/covering_example.png')
+    fig.savefig('../visualisation/covering.png')
 
 
 if __name__ == '__main__':
-    covering = AverageCover((20, 20), Point((0, 0), 0), (15, 1, 3))
+    covering = AverageCover((100, 100), Point((0, 0), 0), (60, 1, 8))
     covering()
 
     for station in covering.placed_stations:
         print('STATION')
         print(station.get_x(), station.get_y(), station.radius)
 
-    covering_visualisation((20, 20), covering.placed_stations)
+    covering_visualisation((100, 100), covering.placed_stations)
