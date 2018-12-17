@@ -35,6 +35,9 @@ class Station:
         else:
             return self.radius > other.radius
 
+    def get_position(self):
+        return self.position
+
     def set_position(self, position):
         self.position = position
 
@@ -117,17 +120,17 @@ class AverageCover:
         max_x = self.area[0]
         max_y = self.area[1]
 
-        if point.x - radius > 0:
-            points.append(Point(point=(point.x - radius, point.y)))
+        if point.x - 2 * radius > 0:
+            points.append(Point(point=(point.x - 2 * radius, point.y)))
 
-        if point.x + radius < max_x:
-            points.append(Point(point=(point.x + radius, point.y)))
+        if point.x + 2 * radius < max_x:
+            points.append(Point(point=(point.x + 2 * radius, point.y)))
 
-        if point.y - radius > 0:
-            points.append(Point(point=(point.x, point.y - radius)))
+        if point.y - 2 * radius > 0:
+            points.append(Point(point=(point.x, point.y - 2 * radius)))
 
-        if point.y + radius < max_y:
-            points.append(Point(point=(point.x, point.y + radius)))
+        if point.y + 2 * radius < max_y:
+            points.append(Point(point=(point.x, point.y + 2 * radius)))
 
         return points
 
@@ -175,7 +178,25 @@ class AverageCover:
         # concat two lists
         self.available_points = self.available_points + self.get_available_points_in_step(point, station.radius)
 
+        self.recalculate_points(point, station.radius)
+
         self.coveraged_area += coveraged_area
+
+    def recalculate_points(self, point, radius):
+        points = self.available_points
+
+        right_border = point.x + radius
+        left_border = point.x - radius
+        up_border = point.y + radius
+        down_border = point.y - radius
+
+        for point in points:
+            if (
+                    right_border > point.x > left_border and
+                    up_border > point.y > down_border
+            ):
+                points.remove(point)
+
 
     def calculate_coveraged_area(self, station, point):
         x = point.x
@@ -224,10 +245,27 @@ class AverageCover:
         self.execute_put_station_to_point(gateway, point, coveraged_area)
 
 
+def covering_visualisation(area, stations):
+    fig, ax = plt.subplots()
+
+    ax.set_xlim(0, area[0])
+    ax.set_ylim(0, area[1])
+
+
+    def get_circle(point, radius):
+        return plt.Circle((point.x, point.y), radius)
+
+    for station in stations:
+        ax.add_artist(get_circle(station.get_position(), station.radius))
+
+    fig.savefig('../visualisation/covering_example.png')
+
 if __name__ == '__main__':
-    covering = AverageCover((20, 20), Point((0, 0), 0), (10, 1, 4))
+    covering = AverageCover((20, 20), Point((0, 0), 0), (15, 1, 3))
     covering()
 
     for station in covering.placed_stations:
         print('STATION')
         print(station.get_x(), station.get_y(), station.radius)
+
+    covering_visualisation((20, 20), covering.placed_stations)
