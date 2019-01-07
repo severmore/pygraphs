@@ -21,20 +21,17 @@ class Station:
     def __eq__(self, other):
         if other is None:
             return False
-        else:
-            return self.radius == other.radius
+        return self.radius == other.radius
 
     def __lt__(self, other):
         if other is None:
             return False
-        else:
-            return self.radius < other.radius
+        return self.radius < other.radius
 
     def __gt__(self, other):
         if other is None:
             return
-        else:
-            return self.radius > other.radius
+        return self.radius > other.radius
 
     def get_position(self):
         return self.position
@@ -198,7 +195,6 @@ class AverageCover:
             ):
                 points.remove(point)
 
-
     def calculate_coveraged_area(self, station, point):
         x = point.x
         y = point.y
@@ -262,7 +258,7 @@ def covering_visualisation(area, stations):
 
 
 if __name__ == '__main__':
-    covering = AverageCover((100, 100), Point((0, 0), 0), (60, 1, 8))
+    covering = AverageCover((100, 100), Point((0, 0), 0), (100, 1, 10))
     covering()
 
     for station in covering.placed_stations:

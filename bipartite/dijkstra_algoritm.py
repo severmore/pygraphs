@@ -16,8 +16,7 @@ from bipartite.binary_heap import BinaryHeap
     of max weight of edge
 """
 
-MAX_WEIGHT = sys.maxsize
-
+MAX_WEIGHT = float('inf')
 
 class DijkstraAlgorithm():
 
@@ -145,7 +144,6 @@ class DijkstraAlgorithm():
             "path": vertexs,
             "weight": initial_vertexs[self.end_index].weight
         }
-
 
 
 class PathTreeNode:
