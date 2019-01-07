@@ -300,10 +300,11 @@ class Geo:
 
 
 if __name__ == '__main__':
-  gen = Geo(100, 200, (800, 800), (25,25))
+  gen = Geo(100, 200, (800, 800), (25, 25))
   graph = gen(10)
 
   gen.show('scene')
   print('Valid?', gen.is_valid())
   print('edges', gen._edges)
+  print('places', gen._places)
   print(graph)

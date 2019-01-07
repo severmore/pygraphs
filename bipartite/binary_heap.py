@@ -18,7 +18,7 @@ class BinaryHeap:
     def add_element(self, value):
         heap_list = self.heap_list
         heap_list.append(value)
-        start_index = self.get_heap_size() -1
+        start_index = self.get_heap_size() - 1
         parent_index = (self.get_heap_size() - 2) // 2
 
         while start_index > 0 and heap_list[parent_index] < heap_list[start_index]:

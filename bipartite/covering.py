@@ -14,24 +14,35 @@ class Point:
 
 
 class Station:
-    def __init__(self, position=Point((0, 0), 0), radius=0):
+    def __init__(self, position=Point((0, 0), 0), radius=0, conn=0, cost=0):
         self.position = position
         self.radius = radius
+        self.conn = conn
+        self.cost = cost
+
+    def __compare__(self, other):
+        """
+        it can be more complex function, while it is only division
+        of coverage on cost of station
+        :param other:
+        :return:
+        """
+        return self.radius / self.cost >= other.radius / self.cost
 
     def __eq__(self, other):
         if other is None:
             return False
-        return self.radius == other.radius
+        return self.__compare__(other) and other.__compare__(self)
 
     def __lt__(self, other):
         if other is None:
             return False
-        return self.radius < other.radius
+        return not self.__compare__(other)
 
     def __gt__(self, other):
         if other is None:
             return
-        return self.radius > other.radius
+        return self.__compare__(other)
 
     def get_position(self):
         return self.position
@@ -62,7 +73,7 @@ class AverageCover:
     gateway_point Point object
     stations_conf - tuple(int, int, int) with params: count, min_radius, max_radius accordingly
     """
-    def __init__(self, area, gateway_point, stations_conf):
+    def __init__(self, area, gateway_point, stations_conf, points):
         self.area = area
         self.gateway_point = gateway_point
 
@@ -79,7 +90,13 @@ class AverageCover:
         self.placed_stations = list()
 
         # points where stations can be placed
+        # discrete variant
         self.available_points = list()
+
+        # all points where stations can be placed
+        self.points = list()
+        for point in points:
+            self.points.append(Point(point))
 
         # coveraged points by stations radius
         # this list is used to find point which
@@ -143,19 +160,34 @@ class AverageCover:
         stations = self.stations
         points = self.available_points
 
-        max_coveraged_area = 0
-        station_to_put = None
+        max_station_efficiency = 0
+        station_to_put = stations[0]
         point_to_put = None
 
         for station in stations:
             for point in points:
-                coveraged_area = self.calculate_coveraged_area(station, point)
-                if coveraged_area > max_coveraged_area:
+
+                station_efficiency = self.station_efficiency(station, point)
+
+                if station_efficiency > max_station_efficiency:
                     station_to_put = station
                     point_to_put = point
-                    max_coveraged_area = coveraged_area
+                    max_station_efficiency = station_efficiency
 
-        self.execute_put_station_to_point(station_to_put, point_to_put, max_coveraged_area)
+        # TODO refactoring
+        self.execute_put_station_to_point(station_to_put, point_to_put, max_station_efficiency * station_to_put.cost)
+
+    def station_efficiency(self, station, point):
+        """
+        This method determines what station more suitable foe this point
+        :param point:
+        :param station:
+        :return:
+        """
+
+        station_covering = self.calculate_coveraged_area(station, point)
+
+        return station_covering / station.cost
 
     def execute_put_station_to_point(self, station, point, coveraged_area):
         """
@@ -174,26 +206,35 @@ class AverageCover:
 
         self.available_points.remove(point)
         # concat two lists
-        self.available_points = self.available_points + self.get_available_points_in_step(point, station.radius)
-
-        self.recalculate_points(point, station.radius)
 
         self.coveraged_area += coveraged_area
 
-    def recalculate_points(self, point, radius):
-        points = self.available_points
+    def recalculate_points(self, placed_station, point):
+        aval_points = self.available_points
+        points = self.points
 
-        right_border = point.x + radius
-        left_border = point.x - radius
-        up_border = point.y + radius
-        down_border = point.y - radius
+        conn = placed_station.conn
 
-        for point in points:
+        up_border = point.y + conn
+        down_border = point.y - conn
+
+        right_border = point.x + conn
+        left_border = point.x - conn
+
+        add_points = list()
+
+        # TODO refactoring
+        for p in points:
             if (
-                    right_border > point.x > left_border and
-                    up_border > point.y > down_border
+                    point.x >= left_border and point.x <= right_border and
+                    up_border >= point.y >= down_border
             ):
-                points.remove(point)
+                add_points.append(p)
+
+        for p in add_points:
+            aval_points.append(p)
+            points.remove(p)
+
 
     def calculate_coveraged_area(self, station, point):
         x = point.x
@@ -235,8 +276,10 @@ class AverageCover:
         :return:
         """
         gateway = self.stations[0]
-        point = Point((0, 0), 0)
-        self.available_points.append(point)
+
+        # put gateway into first available station
+        point = self.available_points[0]
+
         coveraged_area = self.calculate_coveraged_area(gateway, point)
 
         self.execute_put_station_to_point(gateway, point, coveraged_area)
