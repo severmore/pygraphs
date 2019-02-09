@@ -1,6 +1,7 @@
 import random
 import matplotlib.pyplot as plt
 from bipartite.binary_heap import BinaryHeap
+from bipartite.generating import Geo
 
 
 class Point:
@@ -73,10 +74,11 @@ class AverageCover:
     gateway_point Point object
     stations_conf - tuple(int, int, int) with params: count, min_radius, max_radius accordingly
     """
-    def __init__(self, area, gateway_point, stations_conf, points):
+    def __init__(self, area, gateway_point, stations_conf, geo):
         self.area = area
         self.gateway_point = gateway_point
 
+        self.geo = geo
         self.stations_count = stations_conf[0]
         self.min_radius = stations_conf[1]
         self.max_radius = stations_conf[2]
@@ -95,7 +97,7 @@ class AverageCover:
 
         # all points where stations can be placed
         self.points = list()
-        for point in points:
+        for point in geo.get_places():
             self.points.append(Point(point))
 
         # coveraged points by stations radius
@@ -175,7 +177,8 @@ class AverageCover:
                     max_station_efficiency = station_efficiency
 
         # TODO refactoring
-        self.execute_put_station_to_point(station_to_put, point_to_put, max_station_efficiency * station_to_put.cost)
+        if point_to_put is not None:
+            self.execute_put_station_to_point(station_to_put, point_to_put, max_station_efficiency * station_to_put.cost)
 
     def station_efficiency(self, station, point):
         """
@@ -234,7 +237,6 @@ class AverageCover:
         for p in add_points:
             aval_points.append(p)
             points.remove(p)
-
 
     def calculate_coveraged_area(self, station, point):
         x = point.x
@@ -301,7 +303,29 @@ def covering_visualisation(area, stations):
 
 
 if __name__ == '__main__':
-    covering = AverageCover((100, 100), Point((0, 0), 0), (100, 1, 10))
+    """
+        In the begining we generate points 
+        after that generate covering  
+    """
+    # available min distance between stations
+    r_point_min = 100
+
+    # available max distance between stations
+    r_point_max = 200
+
+    # area to cover
+    area = (800, 800)
+
+    # points count
+    points_count = 10
+
+    gen = Geo(r_point_min, r_point_max, area, (25, 25))(points_count)
+
+    points = gen.get_places()
+
+    covering = AverageCover((100, 100), Point((0, 0), 0), (100, 1, 10), points)
+
+    # execute covering
     covering()
 
     for station in covering.placed_stations:
