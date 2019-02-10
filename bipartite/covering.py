@@ -256,17 +256,21 @@ class AverageCover:
         self.execute_put_station_to_point(gateway, point, coveraged_area)
 
 
-def covering_visualisation(area, stations):
+def covering_visualisation(area, stations, points):
     fig, ax = plt.subplots()
 
     ax.set_xlim(0, area[0])
     ax.set_ylim(0, area[1])
 
-    def get_circle(point, radius):
-        return plt.Circle((point.x*gen.cell[0], point.y*gen.cell[0]), radius)
+    def get_circle(point, radius, color):
+        return plt.Circle((point[0]*gen.cell[0], point[1]*gen.cell[0]), radius, fc=color)
 
     for station in stations:
-        ax.add_artist(get_circle(station.get_position(), station.radius))
+        ax.add_artist(get_circle((station.get_x(), station.get_y()), station.radius, 'b'))
+
+    for point in points:
+        ax.add_artist(get_circle(point, 1, 'r'))
+
 
     fig.savefig('../visualisation/covering.png')
 
@@ -294,7 +298,7 @@ if __name__ == '__main__':
 
     points = gen.get_places()
 
-    covering = AverageCover(area, Point((0, 0), 0), (8, 30, 50), gen)
+    covering = AverageCover(area, Point((0, 0), 0), (8, 40, 50), gen)
 
     # execute covering
     covering()
@@ -303,4 +307,4 @@ if __name__ == '__main__':
         print('STATION')
         print(station.get_x(), station.get_y(), station.radius)
 
-    covering_visualisation(area, covering.placed_stations)
+    covering_visualisation(area, covering.placed_stations, points)
