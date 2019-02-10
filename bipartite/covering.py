@@ -95,6 +95,10 @@ class AverageCover:
         # discrete variant
         self.available_points = list()
 
+        # points that are coverage
+        # in the begining this list is empty
+        self.coverage_points = list()
+
         # all points where stations can be placed
         self.points = list()
         for point in geo.get_places():
@@ -126,31 +130,6 @@ class AverageCover:
         for i in range(0, count - 1):
             self.stations.append(Station(radius=generate_radius(min_radius, max_radius)))
 
-    def get_available_points_in_step(self, point, radius):
-        """
-        Now this function return 4 point:
-        left, right, up and down available from point
-        with coverage radius = radius
-        """
-        points = list()
-
-        max_x = self.area[0]
-        max_y = self.area[1]
-
-        if point.x - 2 * radius > 0:
-            points.append(Point(point=(point.x - 2 * radius, point.y)))
-
-        if point.x + 2 * radius < max_x:
-            points.append(Point(point=(point.x + 2 * radius, point.y)))
-
-        if point.y - 2 * radius > 0:
-            points.append(Point(point=(point.x, point.y - 2 * radius)))
-
-        if point.y + 2 * radius < max_y:
-            points.append(Point(point=(point.x, point.y + 2 * radius)))
-
-        return points
-
     def put_station_to_point(self):
         """
         choose the most covering station from available stations
@@ -160,14 +139,14 @@ class AverageCover:
         :return:
         """
         stations = self.stations
-        points = self.available_points
+        avail_points = self.available_points
 
         max_station_efficiency = 0
         station_to_put = stations[0]
         point_to_put = None
 
         for station in stations:
-            for point in points:
+            for point in avail_points:
 
                 station_efficiency = self.station_efficiency(station, point)
 
@@ -196,80 +175,68 @@ class AverageCover:
         """
         his method replace station from station list to placed_stations
         add available points to points list and increment coveraged area
+        :param coveraged_area:
         :param station:
         :param point:
         :param max_coveraged_area:
         :return:
         """
         self.placed_stations.append(station)
-
         self.stations.remove(station)
-
         station.set_position(point)
-
-        self.available_points.remove(point)
-        # concat two lists
-
+        self.recalculate_points(station)
         self.coveraged_area += coveraged_area
 
-    def recalculate_points(self, placed_station, point):
-        aval_points = self.available_points
-        points = self.points
+    def recalculate_points(self, placed_station):
+        all_points = self.points
 
-        conn = placed_station.conn
+        station_point = placed_station.get_position()
 
-        up_border = point.y + conn
-        down_border = point.y - conn
-
-        right_border = point.x + conn
-        left_border = point.x - conn
-
-        add_points = list()
-
-        # TODO refactoring
-        for p in points:
-            if (
-                    point.x >= left_border and point.x <= right_border and
-                    up_border >= point.y >= down_border
-            ):
-                add_points.append(p)
-
-        for p in add_points:
-            aval_points.append(p)
-            points.remove(p)
+        for p in all_points:
+            if self.geo.distance(station_point, p) <= placed_station.conn:
+                if all_points.count(p) == 0:
+                    self.available_points.append(p)
 
     def calculate_coveraged_area(self, station, point):
+        """
+        Calculate count of points
+        and return list of points
+        :param station:
+        :param point:
+        :return:
+        """
         x = point.x
         y = point.y
 
-        radius = station.radius
+        # while only square grid
+        radius = station.radius // self.geo.cell[0]
 
-        coveraged_x = 0
-        coveraged_y = 0
+        coverage_points = list()
 
-        border_x = self.area[0]
-        border_y = self.area[1]
+        # birders for calculations
+        border_left_x = 0
+        border_right_x = self.geo.grid[0] - 1
+        border_up_y = self.geo.grid[0] - 1
+        border_down_y = 0
 
-        # TODO refactoring
-        if x - radius < 0:
-            coveraged_x += x
-        else:
-            coveraged_x += radius
-        if x + radius > border_x:
-            coveraged_x += border_x - x
-        else:
-            coveraged_x += radius
+        if point.x - radius > border_left_x:
+            border_left_x = point.x - radius
 
-        if y - radius < 0:
-            coveraged_y += y
-        else:
-            coveraged_y += radius
-        if y + radius > border_y:
-            coveraged_y += border_y - y
-        else:
-            coveraged_y += radius
+        if point.x + radius < border_right_x:
+            border_right_x = point.x + radius
 
-        return coveraged_x * coveraged_y
+        if point.y + radius < border_up_y:
+            border_up_y = point.y + radius
+
+        if point.y - radius > border_down_y:
+            border_down_y = point.y - radius
+
+        for x1 in range(border_left_x, border_right_x):
+            for y1 in range(border_down_y, border_up_y):
+                if self.geo.distance((x,y), (x1, y1)) <= radius:
+                    coverage_points.append(Point(x1, y1))
+
+        return coverage_points
 
     def put_gateway(self):
         """
@@ -278,10 +245,7 @@ class AverageCover:
         :return:
         """
         gateway = self.stations[0]
-
-        # put gateway into first available station
         point = self.available_points[0]
-
         coveraged_area = self.calculate_coveraged_area(gateway, point)
 
         self.execute_put_station_to_point(gateway, point, coveraged_area)
