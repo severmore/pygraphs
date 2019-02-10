@@ -257,7 +257,7 @@ class AverageCover:
 
 
 def covering_visualisation(area, stations, points):
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(8, 8))
 
     ax.set_xlim(0, area[0])
     ax.set_ylim(0, area[1])
