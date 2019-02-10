@@ -1,6 +1,5 @@
 import random
 import matplotlib.pyplot as plt
-from bipartite.binary_heap import BinaryHeap
 from bipartite.generating import Geo
 
 
@@ -15,7 +14,7 @@ class Point:
 
 
 class Station:
-    def __init__(self, position=Point((0, 0), 0), radius=0, conn=0, cost=0):
+    def __init__(self, position=Point((0, 0), 0), radius=0, conn=0, cost=1):
         self.position = position
         self.radius = radius
         self.conn = conn
@@ -104,10 +103,12 @@ class AverageCover:
         for point in geo.get_places():
             self.points.append(Point(point))
 
+        self.available_points.append(self.points[0])
+
         # coveraged points by stations radius
         # this list is used to find point which
         # are covered by station radius
-        self.caveraged_point = list()
+        self.placed_points = list()
 
         # all coveraged area
         self.coveraged_area = 0
@@ -128,7 +129,7 @@ class AverageCover:
         max_radius = self.max_radius
 
         for i in range(0, count - 1):
-            self.stations.append(Station(radius=generate_radius(min_radius, max_radius)))
+            self.stations.append(Station(radius=10, conn=generate_radius(min_radius, max_radius)))
 
     def put_station_to_point(self):
         """
@@ -144,32 +145,32 @@ class AverageCover:
         max_station_efficiency = 0
         station_to_put = stations[0]
         point_to_put = None
+        station_efficiency = None
 
         for station in stations:
             for point in avail_points:
 
                 station_efficiency = self.station_efficiency(station, point)
 
-                if station_efficiency > max_station_efficiency:
+                if station_efficiency.get('efficiency') > max_station_efficiency:
                     station_to_put = station
                     point_to_put = point
-                    max_station_efficiency = station_efficiency
+                    max_station_efficiency = station_efficiency.get('efficiency')
 
         # TODO refactoring
         if point_to_put is not None:
-            self.execute_put_station_to_point(station_to_put, point_to_put, max_station_efficiency * station_to_put.cost)
+            self.execute_put_station_to_point(station_to_put, point_to_put, station_efficiency)
 
     def station_efficiency(self, station, point):
         """
         This method determines what station more suitable foe this point
         :param point:
         :param station:
-        :return:
+        :return: map {efficiency, points}
         """
 
         station_covering = self.calculate_coveraged_area(station, point)
-
-        return station_covering / station.cost
+        return {'efficiency': len(station_covering) / station.cost, 'points': station_covering}
 
     def execute_put_station_to_point(self, station, point, coveraged_area):
         """
@@ -181,11 +182,13 @@ class AverageCover:
         :param max_coveraged_area:
         :return:
         """
+        self.placed_points.append(point)
         self.placed_stations.append(station)
         self.stations.remove(station)
         station.set_position(point)
         self.recalculate_points(station)
-        self.coveraged_area += coveraged_area
+        self.coverage_points += coveraged_area.get('points')
+        self.coveraged_area += coveraged_area.get('efficiency') * station.cost
 
     def recalculate_points(self, placed_station):
         all_points = self.points
@@ -193,9 +196,11 @@ class AverageCover:
         station_point = placed_station.get_position()
 
         for p in all_points:
-            if self.geo.distance(station_point, p) <= placed_station.conn:
-                if all_points.count(p) == 0:
+            if self.geo.distance((station_point.x, station_point.y), (p.x, p.y)) <= placed_station.conn**2:
+                if p not in self.available_points and p not in self.placed_points:
                     self.available_points.append(p)
+
+        self.available_points.remove(station_point)
 
     def calculate_coveraged_area(self, station, point):
         """
@@ -209,7 +214,7 @@ class AverageCover:
         y = point.y
 
         # while only square grid
-        radius = station.radius // self.geo.cell[0]
+        radius = int(station.radius)
 
         coverage_points = list()
 
@@ -233,8 +238,8 @@ class AverageCover:
 
         for x1 in range(border_left_x, border_right_x):
             for y1 in range(border_down_y, border_up_y):
-                if self.geo.distance((x,y), (x1, y1)) <= radius:
-                    coverage_points.append(Point(x1, y1))
+                if self.geo.distance((x, y), (x1, y1)) <= radius**2:
+                    coverage_points.append(Point((x1, y1)))
 
         return coverage_points
 
@@ -246,7 +251,7 @@ class AverageCover:
         """
         gateway = self.stations[0]
         point = self.available_points[0]
-        coveraged_area = self.calculate_coveraged_area(gateway, point)
+        coveraged_area = self.station_efficiency(gateway, point)
 
         self.execute_put_station_to_point(gateway, point, coveraged_area)
 
@@ -258,7 +263,7 @@ def covering_visualisation(area, stations):
     ax.set_ylim(0, area[1])
 
     def get_circle(point, radius):
-        return plt.Circle((point.x, point.y), radius)
+        return plt.Circle((point.x*gen.cell[0], point.y*gen.cell[0]), radius)
 
     for station in stations:
         ax.add_artist(get_circle(station.get_position(), station.radius))
@@ -272,22 +277,24 @@ if __name__ == '__main__':
         after that generate covering  
     """
     # available min distance between stations
-    r_point_min = 100
+    r_point_min = 20
 
     # available max distance between stations
-    r_point_max = 200
+    r_point_max = 30
 
     # area to cover
-    area = (800, 800)
+    area = (100, 100)
 
     # points count
     points_count = 10
 
-    gen = Geo(r_point_min, r_point_max, area, (25, 25))(points_count)
+    gen = Geo(r_point_min, r_point_max, area, (5, 5))
+
+    gen(points_count)
 
     points = gen.get_places()
 
-    covering = AverageCover((100, 100), Point((0, 0), 0), (100, 1, 10), points)
+    covering = AverageCover(area, Point((0, 0), 0), (8, 30, 50), gen)
 
     # execute covering
     covering()
@@ -296,4 +303,4 @@ if __name__ == '__main__':
         print('STATION')
         print(station.get_x(), station.get_y(), station.radius)
 
-    covering_visualisation((100, 100), covering.placed_stations)
+    covering_visualisation(area, covering.placed_stations)
