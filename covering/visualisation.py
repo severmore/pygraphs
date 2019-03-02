@@ -47,6 +47,8 @@ def covering_visualisation(gen, stations, points):
         )
         ax.text(stations[i].get_x()*gen.cell[0], stations[i].get_y()*gen.cell[1], '{}'.format(i+1), size=14, color='r')
 
+    ax.text(stations[len(stations)-1].get_x() * gen.cell[0], stations[len(stations)-1].get_y() * gen.cell[1], '{}'.format(len(stations)), size=14, color='r')
+
     for point in points:
         ax.add_artist(get_circle(point, 3, 'r'))
 
