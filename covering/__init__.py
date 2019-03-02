@@ -1,70 +1,8 @@
-import random
 import matplotlib.pyplot as plt
+#import covering.stations_generator as generator
 from bipartite.generating import Geo
-
-
-class Point:
-    def __init__(self, point=(0, 0), radius=0):
-        self.x = point[0]
-        self.y = point[1]
-        self.radius = radius
-
-    def __eq__(self, other):
-        return self.x == other.x and self.y == other.y
-
-
-class Station:
-    def __init__(self, position=Point((0, 0), 0), radius=0, conn=0, cost=1):
-        self.position = position
-        self.radius = radius
-        self.conn = conn
-        self.cost = cost
-
-    def __compare__(self, other):
-        """
-        it can be more complex function, while it is only division
-        of coverage on cost of station
-        :param other:
-        :return:
-        """
-        return self.radius / self.cost >= other.radius / self.cost
-
-    def __eq__(self, other):
-        if other is None:
-            return False
-        return self.__compare__(other) and other.__compare__(self)
-
-    def __lt__(self, other):
-        if other is None:
-            return False
-        return not self.__compare__(other)
-
-    def __gt__(self, other):
-        if other is None:
-            return
-        return self.__compare__(other)
-
-    def get_position(self):
-        return self.position
-
-    def set_position(self, position):
-        self.position = position
-
-    def get_x(self):
-        return self.position.x
-
-    def set_x(self, x):
-        self.position.x = x
-
-    def get_y(self):
-        return self.position.y
-
-    def set_y(self, y):
-        self.position.y = y
-
-
-def generate_radius(min_value, max_value):
-    return random.randint(min_value, max_value)
+#import covering.covering_helper as helper
+#import covering.utils as utils
 
 
 class AverageCover:
@@ -114,22 +52,10 @@ class AverageCover:
         self.coveraged_area = 0
 
     def __call__(self, *args, **kwargs):
-        self.generate_stations()
+        self.stations = generate_stations(self.stations_count, (self.min_radius, self.max_radius))
         self.put_gateway()
         while len(self.stations) > 0:
             self.put_station_to_point()
-
-    def generate_stations(self):
-        """
-        method generates stations
-        generate list of stations and set it into self.stations
-        """
-        count = self.stations_count
-        min_radius = self.min_radius
-        max_radius = self.max_radius
-
-        for i in range(0, count - 1):
-            self.stations.append(Station(radius=10, conn=generate_radius(min_radius, max_radius)))
 
     def put_station_to_point(self):
         """
@@ -169,7 +95,7 @@ class AverageCover:
         :return: map {efficiency, points}
         """
 
-        station_covering = self.calculate_coveraged_area(station, point)
+        station_covering = calculate_coveraged_area(self.geo, station, point)
         return {'efficiency': len(station_covering) / station.cost, 'points': station_covering}
 
     def execute_put_station_to_point(self, station, point, coveraged_area):
@@ -201,47 +127,6 @@ class AverageCover:
                     self.available_points.append(p)
 
         self.available_points.remove(station_point)
-
-    def calculate_coveraged_area(self, station, point):
-        """
-        Calculate count of points
-        and return list of points
-        :param station:
-        :param point:
-        :return:
-        """
-        x = point.x
-        y = point.y
-
-        # while only square grid
-        radius = int(station.radius)
-
-        coverage_points = list()
-
-        # birders for calculations
-        border_left_x = 0
-        border_right_x = self.geo.grid[0] - 1
-        border_up_y = self.geo.grid[0] - 1
-        border_down_y = 0
-
-        if point.x - radius > border_left_x:
-            border_left_x = point.x - radius
-
-        if point.x + radius < border_right_x:
-            border_right_x = point.x + radius
-
-        if point.y + radius < border_up_y:
-            border_up_y = point.y + radius
-
-        if point.y - radius > border_down_y:
-            border_down_y = point.y - radius
-
-        for x1 in range(border_left_x, border_right_x):
-            for y1 in range(border_down_y, border_up_y):
-                if self.geo.distance((x, y), (x1, y1)) <= radius**2:
-                    coverage_points.append(Point((x1, y1)))
-
-        return coverage_points
 
     def put_gateway(self):
         """
@@ -281,24 +166,29 @@ if __name__ == '__main__':
         after that generate covering  
     """
     # available min distance between stations
+    from covering.stations_generator import *
+    from bipartite.generating import Geo
+    from covering.covering_helper import *
+    from covering.utils import *
+
     r_point_min = 20
 
     # available max distance between stations
     r_point_max = 30
 
     # area to cover
-    area = (100, 100)
+    area = (400, 400)
 
     # points count
-    points_count = 10
+    points_count = 50
 
-    gen = Geo(r_point_min, r_point_max, area, (5, 5))
+    gen = Geo(r_point_min, r_point_max, area, (25, 25))
 
     gen(points_count)
 
     points = gen.get_places()
 
-    covering = AverageCover(area, Point((0, 0), 0), (8, 40, 50), gen)
+    covering = AverageCover(area, Point((0, 0), 0), (18, 40, 50), gen)
 
     # execute covering
     covering()
