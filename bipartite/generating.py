@@ -164,8 +164,6 @@ class Geo:
     """ Generate in the loop a random position among available ones and apply 
     the mask to each position. """
 
-    self._available = set()
-    
     init_place = (random.randint(0, self.grid[0] - 1), 
                   random.randint(0, self.grid[1] - 1))
     self._places = [init_place]

@@ -1,8 +1,9 @@
 import matplotlib.pyplot as plt
-#import covering.stations_generator as generator
+from covering.stations_generator import *
 from bipartite.generating import Geo
-#import covering.covering_helper as helper
-#import covering.utils as utils
+from covering.covering_helper import *
+from covering.utils import *
+import covering.CONFIG as config
 
 
 class AverageCover:
@@ -11,14 +12,16 @@ class AverageCover:
     gateway_point Point object
     stations_conf - tuple(int, int, int) with params: count, min_radius, max_radius accordingly
     """
-    def __init__(self, area, gateway_point, stations_conf, geo):
-        self.area = area
-        self.gateway_point = gateway_point
+    def __init__(self, gateway_point, stations_conf, geo):
 
+        self.gateway_point = gateway_point
         self.geo = geo
         self.stations_count = stations_conf[0]
         self.min_radius = stations_conf[1]
         self.max_radius = stations_conf[2]
+
+        self.cover_min_radius = stations_conf[3]
+        self.cover_max_radius = stations_conf[4]
 
         # stations to put
         self.stations = list()
@@ -52,7 +55,11 @@ class AverageCover:
         self.coveraged_area = 0
 
     def __call__(self, *args, **kwargs):
-        self.stations = generate_stations(self.stations_count, (self.min_radius, self.max_radius))
+        self.stations = generate_stations(self.stations_count,
+                                          (self.min_radius,
+                                           self.max_radius
+                                           ),
+                                          (40, 100))
         self.put_gateway()
         while len(self.stations) > 0:
             self.put_station_to_point()
@@ -166,29 +173,25 @@ if __name__ == '__main__':
         after that generate covering  
     """
     # available min distance between stations
-    from covering.stations_generator import *
-    from bipartite.generating import Geo
-    from covering.covering_helper import *
-    from covering.utils import *
 
-    r_point_min = 20
+    gen = Geo(config.DISTANCE_MIN,
+              config.DISTANCE_MAX,
+              config.AREA,
+              config.GRID)
 
-    # available max distance between stations
-    r_point_max = 30
-
-    # area to cover
-    area = (400, 400)
-
-    # points count
-    points_count = 50
-
-    gen = Geo(r_point_min, r_point_max, area, (25, 25))
-
-    gen(points_count)
+    gen(config.POINTS_COUNT)
 
     points = gen.get_places()
 
-    covering = AverageCover(area, Point((0, 0), 0), (18, 40, 50), gen)
+    covering = AverageCover(Point((0, 0), 0),
+                            (
+                                config.STATIONS_COUNT,
+                                config.MIN_BACKBONE_RADIUS,
+                                config.MAX_BACKBONE_RADIUS,
+                                config.MIN_COVERING_RADIUS,
+                                config.MAX_COVERING_RADIUS
+                             ),
+                            gen)
 
     # execute covering
     covering()
@@ -197,4 +200,4 @@ if __name__ == '__main__':
         print('STATION')
         print(station.get_x(), station.get_y(), station.radius)
 
-    covering_visualisation(area, covering.placed_stations, points)
+    covering_visualisation(config.AREA, covering.placed_stations, points)
