@@ -163,7 +163,7 @@ def covering_visualisation(area, stations, points):
         ax.add_artist(get_circle(point, 1, 'r'))
 
 
-    fig.savefig('../visualisation/covering.png')
+    fig.savefig('../visualisation/covering_example.png')
 
 
 if __name__ == '__main__':
