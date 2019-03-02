@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-
+import matplotlib.lines as mlines
 
 def covering_visualisation(gen, stations, points):
     fig, ax = plt.subplots(figsize=(8, 8))
@@ -36,6 +36,13 @@ def covering_visualisation(gen, stations, points):
                 (station.get_x(), station.get_y()),
                 station.radius,
                 get_blue_color(i)
+            )
+        )
+    for i in range(0, len(stations) - 1):
+        ax.add_artist(
+            mlines.Line2D(
+                [stations[i].get_x()*gen.cell[0], stations[i+1].get_x()*gen.cell[0]],
+                [stations[i].get_y()*gen.cell[1], stations[i+1].get_y()*gen.cell[1]]
             )
         )
 
