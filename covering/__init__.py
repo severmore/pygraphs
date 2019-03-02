@@ -1,8 +1,8 @@
-import matplotlib.pyplot as plt
 from covering.stations_generator import *
 from bipartite.generating import Geo
 from covering.covering_helper import *
 from covering.utils import *
+from covering.visualisation import *
 import covering.CONFIG as config
 
 
@@ -147,25 +147,6 @@ class AverageCover:
         self.execute_put_station_to_point(gateway, point, coveraged_area)
 
 
-def covering_visualisation(area, stations, points):
-    fig, ax = plt.subplots(figsize=(8, 8))
-
-    ax.set_xlim(0, area[0])
-    ax.set_ylim(0, area[1])
-
-    def get_circle(point, radius, color):
-        return plt.Circle((point[0]*gen.cell[0], point[1]*gen.cell[0]), radius, fc=color)
-
-    for station in stations:
-        ax.add_artist(get_circle((station.get_x(), station.get_y()), station.radius, 'b'))
-
-    for point in points:
-        ax.add_artist(get_circle(point, 1, 'r'))
-
-
-    fig.savefig('../visualisation/covering_example.png')
-
-
 if __name__ == '__main__':
     """
         In the begining we generate points 
@@ -198,4 +179,4 @@ if __name__ == '__main__':
         print('STATION')
         print(station.get_x(), station.get_y(), station.radius)
 
-    covering_visualisation(config.AREA, covering.placed_stations, points)
+    covering_visualisation(gen, covering.placed_stations, points)
