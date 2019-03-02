@@ -9,14 +9,13 @@ import covering.CONFIG as config
 class AverageCover:
     """
     area - tuple (int, int) - area to cover
-    gateway_point Point object
     stations_conf - tuple(int, int, int) with params: count, min_radius, max_radius accordingly
     """
-    def __init__(self, gateway_point, stations_conf, geo):
+    def __init__(self, stations_conf, geo):
 
-        self.gateway_point = gateway_point
         self.geo = geo
         self.stations_count = stations_conf[0]
+
         self.min_radius = stations_conf[1]
         self.max_radius = stations_conf[2]
 
@@ -102,7 +101,7 @@ class AverageCover:
         :return: map {efficiency, points}
         """
 
-        station_covering = calculate_coveraged_area(self.geo, station, point)
+        station_covering = calculate_coverage_area(self.geo, station, point)
         return {'efficiency': len(station_covering) / station.cost, 'points': station_covering}
 
     def execute_put_station_to_point(self, station, point, coveraged_area):
@@ -183,13 +182,12 @@ if __name__ == '__main__':
 
     points = gen.get_places()
 
-    covering = AverageCover(Point((0, 0), 0),
-                            (
-                                config.STATIONS_COUNT,
-                                config.MIN_BACKBONE_RADIUS,
-                                config.MAX_BACKBONE_RADIUS,
-                                config.MIN_COVERING_RADIUS,
-                                config.MAX_COVERING_RADIUS
+    covering = AverageCover((
+                               config.STATIONS_COUNT,
+                               config.MIN_BACKBONE_RADIUS,
+                               config.MAX_BACKBONE_RADIUS,
+                               config.MIN_COVERING_RADIUS,
+                               config.MAX_COVERING_RADIUS
                              ),
                             gen)
 

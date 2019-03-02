@@ -1,18 +1,11 @@
 from covering.utils import Point
 
 
-def calculate_coveraged_area(geo, station, point):
-    """
-    Calculate count of points
-    and return list of points
-    :param station:
-    :param point:
-    :return:
-    """
+def calculate_coverage_area(geo, station, point):
+
     x = point.x
     y = point.y
 
-    # while only square grid
     radius = int(station.radius)
 
     coverage_points = list()
