@@ -121,8 +121,8 @@ class Geo:
     self.mask_center = (math.floor(r_allowed / self.cell[0]), 
                         math.floor(r_allowed / self.cell[1]))
 
-    self.mask_size = (2 * self.mask_center[0] + 1,
-                      2 * self.mask_center[1] + 1)
+    self.mask_size = (2 * (self.mask_center[0] + 1),
+                      2 * (self.mask_center[1] + 1))
 
     self.mask = self.get_mask()
     self.scene = [ [0 
@@ -215,14 +215,17 @@ class Geo:
           else self. mask_size[1]
     )
 
-    for x in range(mask_start[0], mask_end[0]):
-      for y in range(mask_start[1], mask_end[1]):
+    for x in range(mask_start[0], mask_end[0] - 1):
+      for y in range(mask_start[1], mask_end[1] - 1):
 
         shift = (x + mask_pos[0], 
                  y + mask_pos[1])
 
         old = self.scene[shift[0]][shift[1]]
 
+        print(shift[0], shift[1], x, y)
+        print(self.scene)
+        print(self.mask[x][y])
         self.scene[shift[0]][shift[1]] = \
             MASK[ self.scene[shift[0]][shift[1]] ][ self.mask[x][y]]
         

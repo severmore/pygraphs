@@ -56,9 +56,10 @@ class AverageCover:
     def __call__(self, *args, **kwargs):
         self.stations = generate_stations(self.stations_count,
                                           (self.min_radius,
-                                           self.max_radius
-                                           ),
-                                          (40, 100))
+                                           self.max_radius),
+                                          (self.cover_min_radius,
+                                           self.max_radius)
+                                          )
         self.put_gateway()
         while len(self.stations) > 0:
             self.put_station_to_point()
@@ -175,8 +176,8 @@ if __name__ == '__main__':
     # execute covering
     covering()
 
-    for station in covering.placed_stations:
-        print('STATION')
-        print(station.get_x(), station.get_y(), station.radius)
+    #for station in covering.placed_stations:
+    #    print('STATION')
+    #    print(station.get_x(), station.get_y(), station.radius)
 
     covering_visualisation(gen, covering.placed_stations, points)
