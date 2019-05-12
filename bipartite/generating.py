@@ -223,9 +223,6 @@ class Geo:
 
         old = self.scene[shift[0]][shift[1]]
 
-        print(shift[0], shift[1], x, y)
-        print(self.scene)
-        print(self.mask[x][y])
         self.scene[shift[0]][shift[1]] = \
             MASK[ self.scene[shift[0]][shift[1]] ][ self.mask[x][y]]
         

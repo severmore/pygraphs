@@ -5,6 +5,7 @@ from covering.utils import *
 from covering.visualisation import *
 import covering.CONFIG as config
 
+import time
 
 class AverageCover:
     """
@@ -61,7 +62,8 @@ class AverageCover:
                                            self.max_radius)
                                           )
         self.put_gateway()
-        while len(self.stations) > 0:
+        #TODO hack!!!
+        while len(self.stations) > 0 and len(self.available_points) > 0:
             self.put_station_to_point()
 
     def put_station_to_point(self):
@@ -174,8 +176,9 @@ if __name__ == '__main__':
                             gen)
 
     # execute covering
+    start_time = time.time()
     covering()
-
+    print('Execution takes: ' + str(time.time() - start_time))
     #for station in covering.placed_stations:
     #    print('STATION')
     #    print(station.get_x(), station.get_y(), station.radius)
