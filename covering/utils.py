@@ -12,7 +12,7 @@ class Point:
 
 
 class Station:
-    def __init__(self, position=Point((0, 0), 0), radius=0, conn=0, cost=1):
+    def __init__(self, position=(0, 0), radius=0, conn=0, cost=1):
         self.position = position
         self.radius = radius
         self.conn = conn
@@ -49,16 +49,16 @@ class Station:
         self.position = position
 
     def get_x(self):
-        return self.position.x
+        return self.position[0]
 
     def set_x(self, x):
-        self.position.x = x
+        self.position[0] = x
 
     def get_y(self):
-        return self.position.y
+        return self.position[1]
 
     def set_y(self, y):
-        self.position.y = y
+        self.position[1] = y
 
 
 def generate_radius(min_value, max_value):

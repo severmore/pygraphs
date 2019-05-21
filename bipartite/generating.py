@@ -144,7 +144,7 @@ class Geo:
     self.generate(vertices_num)
     self.make_edges()
 
-    print(self._edges)
+    print(self._places)
 
     return bipartite.graph.UDGraph(edges=self._edges, vertices_num=vertices_num)
 

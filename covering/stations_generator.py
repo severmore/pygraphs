@@ -11,7 +11,7 @@ def generate_stations(count, radius, cover_radius):
 
     stations = list()
 
-    for _ in range(0, count - 1):
+    for _ in range(0, count):
         stations.append(Station(radius=generate_radius(min_cover, max_cover),
                                 conn=generate_radius(min_radius, max_radius)))
     return stations

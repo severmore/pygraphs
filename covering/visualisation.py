@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 
-def covering_visualisation(gen, stations, points):
+
+def covering_visualisation(gen, stations, points, picture_name):
     fig, ax = plt.subplots(figsize=(8, 8))
 
     ax.set_xlim(0, gen.area[0])
@@ -10,14 +11,14 @@ def covering_visualisation(gen, stations, points):
     x_grid = list()
     y_grid = list()
 
-    x_max = int(gen.area[0] // gen.grid[0])
-    y_max = int(gen.area[1] // gen.grid[1])
+    x_max = int(gen.area[0] // gen.cell[0])
+    y_max = int(gen.area[1] // gen.cell[1])
 
     for i in range(0, x_max):
-        x_grid.append(gen.grid[0] * i)
+        x_grid.append(gen.cell[0] * i)
 
     for i in range(0, y_max):
-        y_grid.append(gen.grid[1] * i)
+        y_grid.append(gen.cell[1] * i)
 
     ax.set_xticks(x_grid)
     ax.set_yticks(y_grid)
@@ -52,4 +53,4 @@ def covering_visualisation(gen, stations, points):
     for point in points:
         ax.add_artist(get_circle(point, 3, 'r'))
 
-    fig.savefig('../covering/visualisation/covering.png')
+    fig.savefig('../covering/visualisation/{}.png'.format(picture_name))

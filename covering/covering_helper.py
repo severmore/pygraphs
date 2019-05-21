@@ -1,36 +1,27 @@
-from covering.utils import Point
-
 
 def calculate_coverage_area(geo, station, point):
+    radius = int(station.radius // geo.cell[0])
+    coverage_points = set()
 
-    x = point.x
-    y = point.y
-
-    radius = int(station.radius)
-
-    coverage_points = list()
-
-    # borders for calculations
     border_left_x = 0
-    border_right_x = geo.grid[0] - 1
-    border_up_y = geo.grid[0] - 1
+    border_right_x = geo.grid[0]
+    border_up_y = geo.grid[0]
     border_down_y = 0
 
-    if point.x - radius > border_left_x:
-        border_left_x = point.x - radius
+    if point[0] - radius > border_left_x:
+        border_left_x = point[0] - radius
 
-    if point.x + radius < border_right_x:
-        border_right_x = point.x + radius
+    if point[0] + radius < border_right_x:
+        border_right_x = point[0] + radius
 
-    if point.y + radius < border_up_y:
-        border_up_y = point.y + radius
+    if point[1] + radius < border_up_y:
+        border_up_y = point[1] + radius
 
-    if point.y - radius > border_down_y:
-        border_down_y = point.y - radius
+    if point[1] - radius > border_down_y:
+        border_down_y = point[1] - radius
 
-    for x1 in range(border_left_x, border_right_x):
-        for y1 in range(border_down_y, border_up_y):
-            if geo.distance((x, y), (x1, y1)) <= radius ** 2:
-                coverage_points.append(Point((x1, y1)))
+    for x in range(int(border_left_x), int(border_right_x)):
+        for y in range(int(border_down_y), int(border_up_y)):
+            coverage_points.add((x, y))
 
     return coverage_points
